@@ -127,21 +127,52 @@ void Sim800L::checkList()
   String str;
   byte attempt = 0;
  //проверяем готовность модуля к приему команд.
+  this->SoftwareSerial::print(F("AT\r\n "));    //костыль, без него
+  _readSerial();                                //сразу перезагружает
   this->SoftwareSerial::print(F("AT\r\n "));
   while(_readSerial().indexOf("OK")==-1)    //перезагружаем модуль, если не алё
   {
     attempt++;
-    PRINT("restart sim800",);
     reset();
     if (attempt == 5)
     {
-      PRINT("no answer from sim800", "");
+      PRINT("sim800 doesn't answer", "");
       return ;
     }
     this->SoftwareSerial::print(F("AT\r\n"));
   }  
-  PRINT("sim800","answer");
-
+  PRINT("sim800 answered","OK");
+  attempt = 0;
+ //Отключить эхо AT-команд.
+  this->SoftwareSerial::print(F("ATE0\r\n "));
+  if(_readSerial().indexOf("OK")!=-1)
+  {PRINT("echo off","OK");}  
+  else {PRINT("echo off","NO");}
+  //Запрос статуса активности мобильного устройства.
+  this->SoftwareSerial::print(F("AT+CPAS?\r\n ")); 
+  while(_readSerial()[9] != 0)  
+  {
+    attempt++;
+    if (attempt == 5)
+    {
+      PRINT("status mobile devise", "ERROR");
+      return ;
+    }
+    delay(1000);
+    this->SoftwareSerial::print(F("AT+CREG?\r\n ")); 
+  }  
+  PRINT("status mobile devise","OK");  
+  //проверка регистрации в сети
+  this->SoftwareSerial::print(F("AT+CPAS?\r\n "));
+  if(_readSerial().indexOf("OK")!=-1)
+  {PRINT("mobile network","OK");}  
+  else {PRINT("mobile network","ERROR");}
+  //Запрос уровня сигнала:
+  this->SoftwareSerial::print(F("AT+CSQ?\r\n "));
+  PRINT("ignal quality",_readSerial());
+  //уровень заряда аккумулятора
+  this->SoftwareSerial::print(F("AT+CBCM?\r\n "));
+  PRINT("battery charge level",_readSerial());
 }
 
 /*
@@ -341,34 +372,35 @@ String Sim800L::getLatitude()
 
 void Sim800L::reset()
 {
-    if (LED_FLAG) digitalWrite(led_pin,1);
-    digitalWrite(reset_pin,0);
-    delay(1000);
-    digitalWrite(reset_pin,1);
-    delay(1000);
-    // wait for the module response
-    this->SoftwareSerial::print(F("AT\r\n"));
-    byte attempt = 0;
-    while (_readSerial().indexOf("OK")==-1 )
-    {
-        attempt++;
-        this->SoftwareSerial::print(F("AT\r\n"));
-        if(attempt == 5) {
-          attempt = 0;  
-          return;
-        }       
-    }
+  PRINT("restart sim800",);
+  if (LED_FLAG) digitalWrite(led_pin,1);
+  digitalWrite(reset_pin,0);
+  delay(1000);
+  digitalWrite(reset_pin,1);
+  delay(2000);
+  // wait for the module response
+  // this->SoftwareSerial::print(F("AT\r\n"));
+  // byte attempt = 0;
+  // while (_readSerial().indexOf("OK")==-1 )
+  // {
+  //     attempt++;
+  //     this->SoftwareSerial::print(F("AT\r\n"));
+  //     if(attempt == 5) {
+  //       attempt = 0;  
+  //       return;
+  //     }       
+  // }
 
-    //wait for sms ready
-    while (_readSerial().indexOf("SMS")==-1 ) {
-      attempt++;
-        if(attempt == 5) {
-          attempt = 0;  
-          return;
-        }  
-    }
+  //wait for sms ready
+  // while (_readSerial().indexOf("SMS")==-1 ) {
+  //   attempt++;
+  //     if(attempt == 5) {
+  //       attempt = 0;  
+  //       return;
+  //     }  
+  // }
 
-    if (LED_FLAG) digitalWrite(led_pin,0);
+  if (LED_FLAG) digitalWrite(led_pin,0);
 }
 
 bool Sim800L::received()

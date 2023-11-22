@@ -10,6 +10,7 @@
 #define TX_PIN D3      //подключение sim800
 #define RESET_PIN D1   //пин для програмной перезагрузки модуля sim800
 #define LED_PIN D4     //пин индикации работы модуля sim800
+
 Sim800L sim800(RX_PIN,TX_PIN,RESET_PIN,LED_PIN);
 
 
@@ -20,7 +21,6 @@ void setup() {
   Serial.println();     
   Serial.println("Start!");
   sim800.begin(115200);
-  delay(10000);
   sim800.checkList();
 }
 //***************SETUP*************
@@ -28,11 +28,11 @@ void setup() {
 
 //***************LOOP**************
 void loop() {
-  if (sim800.received())
-    Serial.println(sim800._readSerial());
+  // if (sim800.received())
+  //   Serial.println(sim800._readSerial());
 
-   if (Serial.available())
-     sim800.sendMessage(Serial.readString());
+  //  if (Serial.available())
+  //    sim800.sendMessage(Serial.readString());
 
  
 }

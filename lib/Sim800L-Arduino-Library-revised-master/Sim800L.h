@@ -62,7 +62,6 @@
 #include <SoftwareSerial.h>
 #include "Arduino.h"
 
-
 #define DEFAULT_RX_PIN 		10
 #define DEFAULT_TX_PIN 		11
 #define DEFAULT_RESET_PIN 	2		// pin to the reset pin Sim800L
