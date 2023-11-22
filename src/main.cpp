@@ -28,9 +28,9 @@ void setup() {
   Serial.println("Start ESP!");
   GSM.begin(115200);
   GSM.checkList();
-  bme.setMode(FORCED_MODE);         //датчик спит , измерения после вызова .oneMeasurement()
+  bme.setMode(FORCED_MODE);         //датчик спит, измерения после вызова .oneMeasurement()
   bme.begin(); 
-
+  memory.update(0);                 //чтение/сохранение EEProm, для сброса значений сменить число
   sendSetupSms();                   //отправка заряда, значений с датчика 
   PRINT("SETUP,","");  
 }
