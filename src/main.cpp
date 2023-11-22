@@ -1,41 +1,47 @@
 
-#define DEBUGING sim800
-
+#define DEBUGING GSM
 
 #include <Arduino.h>
 #include "EEPROM_memory.h"
 #include "Sim800L.h"
 
-#define RX_PIN D2      //подключение sim800
-#define TX_PIN D3      //подключение sim800
-#define RESET_PIN D1   //пин для програмной перезагрузки модуля sim800
-#define LED_PIN D4     //пин индикации работы модуля sim800
+#define RX_PIN D2      //подключение GSM
+#define TX_PIN D3      //подключение GSM
+#define RESET_PIN D1   //пин для програмной перезагрузки модуля GSM
+#define LED_PIN D4     //пин индикации работы модуля GSM
 
-Sim800L sim800(RX_PIN,TX_PIN,RESET_PIN,LED_PIN);
-
+Sim800L GSM(RX_PIN,TX_PIN,RESET_PIN,LED_PIN);
+int64_t temp;
 
 //***************SETUP*************
-  String temp;
 void setup() {
   Serial.begin(115200);  
   Serial.println();     
   Serial.println("Start!");
-  sim800.begin(115200);
-  sim800.checkList();
+  GSM.begin(115200);
+  GSM.checkList();
 }
 //***************SETUP*************
+
+void waitingSMS();
 
 
 //***************LOOP**************
 void loop() {
-  // if (sim800.received())
-  //   Serial.println(sim800._readSerial());
-
-  //  if (Serial.available())
-  //    sim800.sendMessage(Serial.readString());
-
+  // if (GSM.received()) {
+  //   Serial.println(GSM._readSerial());
+  // }
+  //  if (Serial.available()){
+  //   GSM.sendMessage(Serial.readString());
+  // }
+  waitingSMS();
  
 }
 //***************LOOP**************
-
-   
+void waitingSMS() {
+  byte index = GSM.checkForSMS();
+  if(index != 0)
+  {
+  	Serial.println(GSM.readSms(index));
+  } 
+}

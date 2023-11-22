@@ -134,6 +134,7 @@ void Sim800L::checkList()
   {
     attempt++;
     reset();
+    PRINT("sim800", "well be rebooting");
     if (attempt == 5)
     {
       PRINT("sim800 doesn't answer", "");
@@ -148,7 +149,7 @@ void Sim800L::checkList()
   if(_readSerial().indexOf("OK")!=-1)
   {PRINT("echo off","OK");}  
   else {PRINT("echo off","NO");}
-  //Запрос статуса активности мобильного устройства.
+  //проверяем готовность и текущее состояние модуля.
   this->SoftwareSerial::print(F("AT+CPAS?\r\n ")); 
   while(_readSerial()[9] != 0)  
   {
@@ -160,19 +161,36 @@ void Sim800L::checkList()
     }
     delay(1000);
     this->SoftwareSerial::print(F("AT+CREG?\r\n ")); 
-  }  
+  } 
+  attempt = 0; 
   PRINT("status mobile devise","OK");  
+  // //проверка пинкода, ввод.
+  // if(statusPin()){  
+  //   enterPin();
+  // }
   //проверка регистрации в сети
   this->SoftwareSerial::print(F("AT+CPAS?\r\n "));
   if(_readSerial().indexOf("OK")!=-1)
-  {PRINT("mobile network","OK");}  
+    {PRINT("mobile network","OK");}  
   else {PRINT("mobile network","ERROR");}
   //Запрос уровня сигнала:
-  this->SoftwareSerial::print(F("AT+CSQ?\r\n "));
-  PRINT("ignal quality",_readSerial());
-  //уровень заряда аккумулятора
-  this->SoftwareSerial::print(F("AT+CBCM?\r\n "));
-  PRINT("battery charge level",_readSerial());
+  int signal = getSignalQuality();
+  if(signal == -1)
+    { PRINT("no signal",""); }
+  else { PRINT("signal quality","signal"); }
+  //подготовка смс
+  while(!prepareForSmsReceive())
+  {
+    attempt++;
+    if (attempt == 5)
+    {
+      PRINT("prepareForSmsReceive", "ERROR");
+      return ;
+    }
+    delay(1000);
+  }
+  attempt = 0;
+  PRINT("prepareForSmsReceive", "OK");
 }
 
 /*
@@ -243,11 +261,32 @@ uint8_t Sim800L::getFunctionalityMode()
     return _functionalityMode;
 }
 
-bool Sim800L::setPIN(String pin)
+bool Sim800L::statusPin()
+{
+  this->SoftwareSerial::print(F("AT+CPIN?\r\n "));
+  String str = _readSerial();
+  if ( (_readSerial().indexOf("READY")) == -1)
+  {
+    PRINT ("enter", str);
+    return true;
+  }
+  else 
+  {
+    PRINT ("sim pin", "not required");
+    return false;  
+  }
+}
+
+void Sim800L::setPIN(String pin)
+{
+  PINKode = pin;
+}
+
+bool Sim800L::enterPin()
 {
     String command;
     command  = "AT+CPIN=";
-    command += pin;
+    command += PINKode;
     command += "\r";
 
     // Can take up to 5 seconds
@@ -256,9 +295,13 @@ bool Sim800L::setPIN(String pin)
 
     if ( (_readSerial(5000).indexOf("ER")) == -1)
     {
-        return false;
+      PRINT("the pinKode is not correct","");
+      return false;
     }
-    else return true;
+    else {
+      PRINT("the pinKode is correct","");
+      return true;
+    }
     // Error found, return 1
     // Error NOT found, return 0
 }
@@ -269,7 +312,6 @@ String Sim800L::getProductInfo()
     this->SoftwareSerial::print("ATI\r");
     return (_readSerial());
 }
-
 
 String Sim800L::getOperatorsList()
 {
@@ -291,6 +333,14 @@ String Sim800L::getOperator()
 
 }
 
+int Sim800L::getSignalQuality()
+{
+  this->SoftwareSerial::print(F("AT+CSQ?\r\n "));
+  int64_t signal;
+  if ( _numberSearch(_readSerial(),signal))
+    return signal;
+  else return -1;
+}
 
 bool Sim800L::calculateLocation()
 {
@@ -378,27 +428,27 @@ void Sim800L::reset()
   delay(1000);
   digitalWrite(reset_pin,1);
   delay(2000);
-  // wait for the module response
-  // this->SoftwareSerial::print(F("AT\r\n"));
-  // byte attempt = 0;
-  // while (_readSerial().indexOf("OK")==-1 )
-  // {
-  //     attempt++;
-  //     this->SoftwareSerial::print(F("AT\r\n"));
-  //     if(attempt == 5) {
-  //       attempt = 0;  
-  //       return;
-  //     }       
-  // }
+  //wait for the module response
+  this->SoftwareSerial::print(F("AT\r\n"));
+  byte attempt = 0;
+  while (_readSerial().indexOf("OK")==-1 )
+  {
+      attempt++;
+      this->SoftwareSerial::print(F("AT\r\n"));
+      if(attempt == 5) {
+        attempt = 0;  
+        return;
+      }       
+  }
 
   //wait for sms ready
-  // while (_readSerial().indexOf("SMS")==-1 ) {
-  //   attempt++;
-  //     if(attempt == 5) {
-  //       attempt = 0;  
-  //       return;
-  //     }  
-  // }
+  while (_readSerial().indexOf("SMS")==-1 ) {
+    attempt++;
+      if(attempt == 5) {
+        attempt = 0;  
+        return;
+      }  
+  }
 
   if (LED_FLAG) digitalWrite(led_pin,0);
 }
@@ -806,3 +856,59 @@ String Sim800L::_readSerial(uint32_t timeout)
 
 }
 
+bool Sim800L::_numberSearch(const String &strSearch, int64_t& result)
+{
+    char* searchInt = new char[strSearch.length() + 1];
+    int ii = 0;
+    int incoming = 0;
+    while (1)
+    {
+        switch (strSearch[incoming])
+        {
+        case '0':
+            searchInt[ii++] = strSearch[incoming++];
+            break;
+        case '1':
+            searchInt[ii++] = strSearch[incoming++];
+            break;
+        case '2':
+            searchInt[ii++] = strSearch[incoming++];
+            break;
+        case '3':
+            searchInt[ii++] = strSearch[incoming++];
+            break;
+        case '4':
+            searchInt[ii++] = strSearch[incoming++];
+            break;
+        case '5':
+            searchInt[ii++] = strSearch[incoming++];
+            break;
+        case '6':
+            searchInt[ii++] = strSearch[incoming++];
+            break;
+        case '7':
+            searchInt[ii++] = strSearch[incoming++];
+            break;
+        case '8':
+            searchInt[ii++] = strSearch[incoming++];
+            break;
+        case '9':
+            searchInt[ii++] = strSearch[incoming++];
+            break;
+        case ',':
+            searchInt[ii++] = strSearch[incoming++];
+            break;
+        default:
+            if (ii != 0)
+            {
+                searchInt[ii] = '\0';
+                result = atoll(searchInt);
+                return true;
+            }
+            incoming++;
+            break;
+        }
+        if (incoming == strSearch.length())
+            return false;
+    }
+}

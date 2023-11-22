@@ -95,7 +95,11 @@ private:
     String _locationCode;
     String _longitude;
     String _latitude;
-
+    String PINKode;
+    bool _numberSearch(const String &strSearch, int64_t& result);
+    //возвращает число из переданной строки
+    //0 нет числа
+    //1 всё ок, вот тебе число
 public:
     String _readSerial();
     String _readSerial(uint32_t timeout);
@@ -126,11 +130,17 @@ public:
     bool setFunctionalityMode(uint8_t fun);
     uint8_t getFunctionalityMode();
 
-    bool setPIN(String pin);
-    String getProductInfo();
+    bool statusPin ();
+    void setPIN(String pin);
+    bool enterPin();
+    
+    String getProductInfo();    //Запрос информации об устройстве
 
     String getOperatorsList();
     String getOperator();
+    int getSignalQuality();
+
+    //int 
 
     bool calculateLocation();
     String getLocationCode();
@@ -154,7 +164,7 @@ public:
     void setPhoneFunctionality();
     void activateBearerProfile();
     void deactivateBearerProfile();
-    bool setMode();
+    //bool setMode();
 
     void RTCtime(int *day,int *month, int *year,int *hour,int *minute, int *second);
     String dateNet();
