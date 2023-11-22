@@ -336,7 +336,7 @@ String Sim800L::getOperator()
 int Sim800L::getSignalQuality()
 {
   this->SoftwareSerial::print(F("AT+CSQ?\r\n "));
-    return _numberSearch(_readSerial());
+    return numberSearch(_readSerial());
 }
 
 bool Sim800L::calculateLocation()
@@ -853,58 +853,7 @@ String Sim800L::_readSerial(uint32_t timeout)
 
 }
 
-int64_t Sim800L::_numberSearch(const String &strSearch)
-{
-    char* searchInt = new char[strSearch.length() + 1];
-    int ii = 0;
-    int incoming = 0;
-    while (1)
-    {
-        switch (strSearch[incoming])
-        {
-        case '0':
-            searchInt[ii++] = strSearch[incoming++];
-            break;
-        case '1':
-            searchInt[ii++] = strSearch[incoming++];
-            break;
-        case '2':
-            searchInt[ii++] = strSearch[incoming++];
-            break;
-        case '3':
-            searchInt[ii++] = strSearch[incoming++];
-            break;
-        case '4':
-            searchInt[ii++] = strSearch[incoming++];
-            break;
-        case '5':
-            searchInt[ii++] = strSearch[incoming++];
-            break;
-        case '6':
-            searchInt[ii++] = strSearch[incoming++];
-            break;
-        case '7':
-            searchInt[ii++] = strSearch[incoming++];
-            break;
-        case '8':
-            searchInt[ii++] = strSearch[incoming++];
-            break;
-        case '9':
-            searchInt[ii++] = strSearch[incoming++];
-            break;
-        case ',':
-            searchInt[ii++] = strSearch[incoming++];
-            break;
-        default:
-            if (ii != 0)
-            {
-                searchInt[ii] = '\0';
-                return atoll(searchInt);
-            }
-            incoming++;
-            break;
-        }
-        if (incoming == strSearch.length())
-            return -1;
-    }
-}
+
+#if (DEBUGING == sim800)
+#undef DEBUGING
+#endif

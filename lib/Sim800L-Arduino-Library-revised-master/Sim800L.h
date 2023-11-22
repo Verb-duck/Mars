@@ -82,6 +82,7 @@
   Serial.println(y);
 #endif
 #endif
+int64_t numberSearch(const String &strSearch);
 
 class Sim800L : public SoftwareSerial
 {
@@ -96,14 +97,11 @@ private:
     String _longitude;
     String _latitude;
     String PINKode;
-    int64_t _numberSearch(const String &strSearch);
-    //возвращает число из переданной строки
-    //0 нет числа
-    //1 всё ок, вот тебе число
-public:
+
     String _readSerial();
     String _readSerial(uint32_t timeout);
     
+public:  
 
     uint8_t	rx_pin;
     uint8_t tx_pin;
