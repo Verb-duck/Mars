@@ -57,6 +57,8 @@
  *
 */
 
+#define DEBUGING 0
+
 #ifndef Sim800L_h
 #define Sim800L_h
 #include <SoftwareSerial.h>
@@ -73,14 +75,11 @@
 #define DEFAULT_BAUD_RATE		9600
 #define TIME_OUT_READ_SERIAL	5000
 
-#ifndef DEBUGING
-#define DEBUGING sim800
 #if (DEBUGING == sim800)
 #define PRINT(title, y) \
   Serial.print(title); \
   Serial.print(": "); \
   Serial.println(y);
-#endif
 #endif
 int64_t numberSearch(const String &strSearch);
 
@@ -150,9 +149,11 @@ public:
     bool hangoffCall();
     uint8_t getCallStatus();
 
-	const uint8_t checkForSMS();
-	bool prepareForSmsReceive();
-    bool sendSms(char* number,char* text);
+	  const uint8_t checkForSMS();    
+      //return number sms
+      //0 dont new sms
+	  bool prepareForSmsReceive();
+    bool sendSms(const char* number,const char* text);
     String readSms(uint8_t index);
     String getNumberSms(uint8_t index);
     bool delAllSms();

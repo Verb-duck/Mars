@@ -154,10 +154,11 @@ void Sim800L::checkList()
   while(_readSerial()[9] != 0)  
   {
     attempt++;
+    reset();
     if (attempt == 5)
     {
       PRINT("status mobile devise", "ERROR");
-      return ;
+      return; ;
     }
     delay(1000);
     this->SoftwareSerial::print(F("AT+CREG?\r\n ")); 
@@ -581,7 +582,7 @@ bool Sim800L::hangoffCall()
 }
 
 
-bool Sim800L::sendSms(char* number,char* text)
+bool Sim800L::sendSms(const char* number,const char* text)
 {
 
     // Can take up to 60 seconds
