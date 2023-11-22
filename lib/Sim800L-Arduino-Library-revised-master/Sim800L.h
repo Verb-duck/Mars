@@ -96,7 +96,7 @@ private:
     String _longitude;
     String _latitude;
     String PINKode;
-    bool _numberSearch(const String &strSearch, int64_t& result);
+    int64_t _numberSearch(const String &strSearch);
     //возвращает число из переданной строки
     //0 нет числа
     //1 всё ок, вот тебе число

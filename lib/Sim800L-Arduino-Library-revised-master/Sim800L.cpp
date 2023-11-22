@@ -177,7 +177,7 @@ void Sim800L::checkList()
   int signal = getSignalQuality();
   if(signal == -1)
     { PRINT("no signal",""); }
-  else { PRINT("signal quality","signal"); }
+  else { PRINT("signal quality",signal); }
   //подготовка смс
   while(!prepareForSmsReceive())
   {
@@ -336,10 +336,7 @@ String Sim800L::getOperator()
 int Sim800L::getSignalQuality()
 {
   this->SoftwareSerial::print(F("AT+CSQ?\r\n "));
-  int64_t signal;
-  if ( _numberSearch(_readSerial(),signal))
-    return signal;
-  else return -1;
+    return _numberSearch(_readSerial());
 }
 
 bool Sim800L::calculateLocation()
@@ -856,7 +853,7 @@ String Sim800L::_readSerial(uint32_t timeout)
 
 }
 
-bool Sim800L::_numberSearch(const String &strSearch, int64_t& result)
+int64_t Sim800L::_numberSearch(const String &strSearch)
 {
     char* searchInt = new char[strSearch.length() + 1];
     int ii = 0;
@@ -902,13 +899,12 @@ bool Sim800L::_numberSearch(const String &strSearch, int64_t& result)
             if (ii != 0)
             {
                 searchInt[ii] = '\0';
-                result = atoll(searchInt);
-                return true;
+                return atoll(searchInt);
             }
             incoming++;
             break;
         }
         if (incoming == strSearch.length())
-            return false;
+            return -1;
     }
 }

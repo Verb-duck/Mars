@@ -5,13 +5,14 @@
 #include "EEPROM_memory.h"
 #include "Sim800L.h"
 
+//------sim800------
+#define RESET_PIN D1   //пин для програмной перезагрузки модуля GSM
 #define RX_PIN D2      //подключение GSM
 #define TX_PIN D3      //подключение GSM
-#define RESET_PIN D1   //пин для програмной перезагрузки модуля GSM
-#define LED_PIN D4     //пин индикации работы модуля GSM
+Sim800L GSM(RX_PIN,TX_PIN,RESET_PIN);
 
-Sim800L GSM(RX_PIN,TX_PIN,RESET_PIN,LED_PIN);
-int64_t temp;
+//------переменные----
+auto value = create(static_cast<int64_t>(0),"value from sms");  //переменная для сохранения значения из смс
 
 //***************SETUP*************
 void setup() {
@@ -39,9 +40,5 @@ void loop() {
 }
 //***************LOOP**************
 void waitingSMS() {
-  byte index = GSM.checkForSMS();
-  if(index != 0)
-  {
-  	Serial.println(GSM.readSms(index));
-  } 
+  
 }
