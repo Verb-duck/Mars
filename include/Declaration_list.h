@@ -8,11 +8,13 @@
   void sendSetupSms();
   
   //макрос
-  #if (DEBUGING == sim800)
+  #if (DEBUGING)
   #define PRINT(title, y) \
     Serial.print(title); \
     Serial.print(": "); \
     Serial.println(y);
+  #else 
+  #define PRINT(title, y) 
   #endif
 
 

@@ -132,7 +132,7 @@ inline void Container<Type>::writeEEPROM()
   Serial.print(" in ");
   Serial.print(name);
   Serial.print(" at addres ");
-  Serial.print(addres);
+  Serial.println(addres);
   #endif
 }
 

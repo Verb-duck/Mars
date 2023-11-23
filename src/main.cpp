@@ -30,9 +30,9 @@ void setup() {
   GSM.checkList();
   bme.setMode(FORCED_MODE);         //датчик спит, измерения после вызова .oneMeasurement()
   bme.begin(); 
-  memory.update(0);                 //чтение/сохранение EEProm, для сброса значений сменить число
+  memory.update(1);                 //чтение/сохранение EEProm, для сброса значений сменить число
   sendSetupSms();                   //отправка заряда, значений с датчика 
-  PRINT("SETUP,","");  
+
 }
 
 

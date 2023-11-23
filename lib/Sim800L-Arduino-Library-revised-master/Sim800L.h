@@ -57,7 +57,7 @@
  *
 */
 
-#define DEBUGING 0
+#define DEBUGING 1
 
 #ifndef Sim800L_h
 #define Sim800L_h
@@ -75,11 +75,13 @@
 #define DEFAULT_BAUD_RATE		9600
 #define TIME_OUT_READ_SERIAL	5000
 
-#if (DEBUGING == sim800)
+#if (DEBUGING)
 #define PRINT(title, y) \
   Serial.print(title); \
   Serial.print(": "); \
   Serial.println(y);
+#else 
+#define PRINT(title, y) 
 #endif
 int64_t numberSearch(const String &strSearch);
 
