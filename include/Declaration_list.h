@@ -1,5 +1,5 @@
 #ifndef Declaration_list_h
-#define Declaration_list.h
+#define Declaration_list.h  
 #include <Arduino.h>
 
 //------предварительное объявление------
@@ -17,6 +17,9 @@
   #define PRINT(title, y) 
   #endif
 
+ 
+
+
 
 void waitingSMS() {
   byte index = GSM.checkForSMS();
@@ -31,9 +34,6 @@ void waitingSMS() {
   } 
 }
 
-int chargeMeasurement() {     //измеряем заряд
-  return 90;
-}
 
 void sendSetupSms()
 {
@@ -41,7 +41,7 @@ void sendSetupSms()
  //заряд батареи
   message += "battery: ";
   char temp[5];
-  itoa(chargeMeasurement(),temp,10);
+  itoa(GSM.getChargeLevelBattery(),temp,10);
   message += temp;
   message += "% ";
 
@@ -70,6 +70,9 @@ void sendSetupSms()
   message += "% ";
 
   GSM.sendSms(PHONE_NUMBER,message.c_str());
+
+  Serial.print("text sms  ");
+  Serial.println(message );
 }
 
 int64_t numberSearch(const String &strSearch)
@@ -130,4 +133,50 @@ int64_t numberSearch(const String &strSearch)
             return -1;
     }
 }
+
+//когда нибудь дописать, выбрасывание исключений.
+// template<typename Type> 
+// class exception  
+// {
+//   protected:
+//   public:
+//   static Type _note;
+//   static bool _trouble;
+//   exception(Type note)
+//   {
+//     this->_note = note;
+//     _trouble = true;
+//   }
+//   ~exception() 
+//   {
+//     _trouble = false;
+//   }
+// };
+// template<typename Type>
+// Type exception<Type>::_note;
+// template<typename Type>
+// bool exception<Type>::_trouble = false;
+
+//    #define CATCH(note)\
+//     if(exception::_note == note) continue;\
+//     else 
+
+// template<typename Type>
+// class catch
+// {
+//   catch(Type note) 
+//   {
+
+//   }
+// };
+
+
+//  #define throw(note)\
+//     exception(note);\
+//     return 0;
+
+// int try_catch() {  
+//   throw(1);
+//   return 90;
+// }
 #endif

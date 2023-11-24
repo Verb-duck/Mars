@@ -74,6 +74,7 @@
 #define BUFFER_RESERVE_MEMORY	255
 #define DEFAULT_BAUD_RATE		9600
 #define TIME_OUT_READ_SERIAL	5000
+#define BUFFER_INCOMING_SIZE 30
 
 #if (DEBUGING)
 #define PRINT(title, y) \
@@ -89,86 +90,95 @@ class Sim800L : public SoftwareSerial
 {
 private:
 
-    uint32_t _baud;
-    int _timeout;
-    String _buffer;
-    bool _sleepMode;
-    uint8_t _functionalityMode;
-    String _locationCode;
-    String _longitude;
-    String _latitude;
-    String PINKode;
+  uint32_t _baud;
+  int _timeout;
+  String _buffer;
+  bool _sleepMode;
+  uint8_t _functionalityMode;
+  String _locationCode;
+  String _longitude;
+  String _latitude;
+  String PINKode;
 
-    String _readSerial();
-    String _readSerial(uint32_t timeout);
-    
+  //read serial sim800  
+  char _buf[BUFFER_INCOMING_SIZE];    //буфер входяшего сообщения
+  char **partMSG = new char*[10];                  //буфер разделенных строк 
+  byte _countDivBuff = 0;             //количество подстрок
+  char _divider = ',';                //символ для разделения строки на подстроки 
+  String _readSerial();
+  String _readSerial(uint32_t timeout);
+  bool _readSerialChar();
+
+  int64_t getInt(int num);            //получить int из подстроки  
+  float getFloat(int num);            //получить float
+  bool equals(int num, const char* comp);  // сравнить подстроку с другой строкой
+  
+
 public:  
 
-    uint8_t	rx_pin;
-    uint8_t tx_pin;
-    uint8_t reset_pin;
-    uint8_t led_pin;
-    bool	LED_FLAG;
+  uint8_t	rx_pin;
+  uint8_t tx_pin;
+  uint8_t reset_pin;
+  uint8_t led_pin;
+  bool	LED_FLAG;
 
-    Sim800L(void);
-    Sim800L(uint8_t rx, uint8_t tx);
-    Sim800L(uint8_t rx, uint8_t tx, uint8_t rst);
-    Sim800L(uint8_t rx, uint8_t tx, uint8_t rst, uint8_t led);
+  Sim800L(void);
+  Sim800L(uint8_t rx, uint8_t tx);
+  Sim800L(uint8_t rx, uint8_t tx, uint8_t rst);
+  Sim800L(uint8_t rx, uint8_t tx, uint8_t rst, uint8_t led);
 
-    void begin();					//Default baud 9600
-    void begin(uint32_t baud);
-    void reset();
-    void checkList();
+  void begin();					//Default baud 9600
+  void begin(uint32_t baud);
+  void reset();
+  void checkList();
+  
+  String readMessage();
+  void sendMessage(String message);
 
-    bool received();
-    String readMessage();
-    void sendMessage(String message);
+  bool setSleepMode(bool state);
+  bool getSleepMode();
+  bool setFunctionalityMode(uint8_t fun);
+  uint8_t getFunctionalityMode();
+  int getChargeLevelBattery();
 
-    bool setSleepMode(bool state);
-    bool getSleepMode();
-    bool setFunctionalityMode(uint8_t fun);
-    uint8_t getFunctionalityMode();
-    int getChargeLevelBattery();
+  bool statusPin ();
+  void setPIN(String pin);
+  bool enterPin();
+  
+  String getProductInfo();    //Запрос информации об устройстве
 
-    bool statusPin ();
-    void setPIN(String pin);
-    bool enterPin();
-    
-    String getProductInfo();    //Запрос информации об устройстве
+  String getOperatorsList();
+  String getOperator();
+  int getSignalQuality();
 
-    String getOperatorsList();
-    String getOperator();
-    int getSignalQuality();
+  bool calculateLocation();
+  String getLocationCode();
+  String getLongitude();
+  String getLatitude();
 
-    bool calculateLocation();
-    String getLocationCode();
-    String getLongitude();
-    String getLatitude();
+  bool answerCall();
+  void callNumber(char* number);
+  bool hangoffCall();
+  uint8_t getCallStatus();
 
-    bool answerCall();
-    void callNumber(char* number);
-    bool hangoffCall();
-    uint8_t getCallStatus();
+  const uint8_t checkForSMS();    
+    //return number sms
+    //0 dont new sms
+  bool prepareForSmsReceive();
+  bool sendSms(const char* number,const char* text);
+  String readSms(uint8_t index);
+  String getNumberSms(uint8_t index);
+  bool delAllSms();
 
-	  const uint8_t checkForSMS();    
-      //return number sms
-      //0 dont new sms
-	  bool prepareForSmsReceive();
-    bool sendSms(const char* number,const char* text);
-    String readSms(uint8_t index);
-    String getNumberSms(uint8_t index);
-    bool delAllSms();
+  String signalQuality();
+  void setPhoneFunctionality();
+  void activateBearerProfile();
+  void deactivateBearerProfile();
+  //bool setMode();
 
-
-    String signalQuality();
-    void setPhoneFunctionality();
-    void activateBearerProfile();
-    void deactivateBearerProfile();
-    //bool setMode();
-
-    void RTCtime(int *day,int *month, int *year,int *hour,int *minute, int *second);
-    String dateNet();
-    bool updateRtc(int utc);
+  void RTCtime(int *day,int *month, int *year,int *hour,int *minute, int *second);
+  String dateNet();
+  bool updateRtc(int utc);
 
 };
 

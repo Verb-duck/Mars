@@ -1,6 +1,6 @@
 
 #define DEBUGING 1
-#define PHONE_NUMBER "+79098087076"
+#define PHONE_NUMBER "+79522220302"
 
 
 #include <Arduino.h>
@@ -32,7 +32,6 @@ void setup() {
   bme.begin(); 
   memory.update(1);                 //чтение/сохранение EEProm, для сброса значений сменить число
   sendSetupSms();                   //отправка заряда, значений с датчика 
-
 }
 
 
@@ -40,5 +39,5 @@ void setup() {
 void loop() {
   
   waitingSMS();
- 
+
 }

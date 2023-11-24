@@ -175,10 +175,7 @@ void Sim800L::checkList()
     {PRINT("mobile network","OK");}  
   else {PRINT("mobile network","ERROR");}
   //Запрос уровня сигнала:
-  int signal = getSignalQuality();
-  if(signal == -1)
-    { PRINT("no signal",""); }
-  else { PRINT("signal quality",signal); }
+  PRINT("signal quality",getSignalQuality()); 
   //подготовка смс
   while(!prepareForSmsReceive())
   {
@@ -193,7 +190,7 @@ void Sim800L::checkList()
   attempt = 0;
   PRINT("prepareForSmsReceive", "OK");
   //уровень заряда акб
-  getChargeLevelBattery();
+  PRINT("battery level", getChargeLevelBattery());
 }
 
 
@@ -340,24 +337,31 @@ String Sim800L::getOperator()
 int Sim800L::getSignalQuality()
 {
   this->SoftwareSerial::print(F("AT+CSQ?\r\n "));
-    return numberSearch(_readSerial());
+  if(_readSerialChar())
+  {
+    //if(equals(0 , "ERROR"))
+    return atoll(partMSG[0]);
+  }
+  return -1;
 }
 
 int Sim800L::getChargeLevelBattery() 
 {
   this->SoftwareSerial::print(F("AT+CBC\r\n "));
-  String str = _readSerial();
-  if(str.indexOf("ERR"))
+  //возвращает:  +СBC состояние, заряд АКБ, напряжение
+//    СОСТОЯНИЕ - представлено числом от 0 до 5:
+// 0 - Адаптер ЗУ не подключён.
+// 1 - Адаптер ЗУ подключён.
+// 2 - Адаптер ЗУ подключён, АКБ заряжается.
+// 3 - Адаптер ЗУ подключён, АКБ заряжена.
+// 4 - Зарядка прервана.
+// 5 - Зарядка прервана из-за превышения темп
+  if(_readSerialChar())
   {
-  PRINT("akb level",str);
-    return - 1;
+    //if(equals(0 , "ERROR"))
+    return atoll(partMSG[1]);
   }
-  else 
-  {
-
-  PRINT("akb level",_readSerial() );
-  }
-  return 1;
+  return -1;
 }
 
 
@@ -472,15 +476,6 @@ void Sim800L::reset()
   if (LED_FLAG) digitalWrite(led_pin,0);
 }
 
-bool Sim800L::received()
-{ 
-  if(!this->SoftwareSerial::available())
-    return false;
-  else 
-  {
-    return true;
-  }  
-}
 
 String  Sim800L::readMessage(){
   
@@ -875,6 +870,49 @@ String Sim800L::_readSerial(uint32_t timeout)
 
 }
 
+bool Sim800L::_readSerialChar()
+{
+  bool result = false;
+  byte _countBuff = 0;
+  _countDivBuff = 0; 
+  // if(partMSG)    если не удалять можно по ошибке обратиться к данным предыдущего запроса.
+  // {
+  //   Serial.println(" delet new");
+  //   delete[] partMSG ;
+  // }
+  //partMSG = new char*[10];
+  partMSG[_countDivBuff++]=_buf;          //запоминаем первую подстроку
+  uint64_t timeOld = millis();
+
+  while (!this->SoftwareSerial::available() && !(millis() > timeOld + TIME_OUT_READ_SERIAL))
+  {
+      delay(13);
+  }
+
+  while(this->SoftwareSerial::available())
+  {
+    result = true;
+    char ch  = this->SoftwareSerial::read();
+    if(ch == _divider)                            //если разделитель, 
+    {
+      _buf[_countBuff++] = '\0';
+      partMSG[_countDivBuff++]=_buf + _countBuff;   //запоминаем начало след разделенной строки
+      continue;
+    }
+    if(_countBuff < BUFFER_INCOMING_SIZE - 1)         //если есть место
+      _buf[_countBuff++] = ch;
+  }
+  return result;
+}
+
+int64_t Sim800L::getInt(int num) 
+  { return atoll(partMSG[num]); }
+
+float Sim800L::getFloat(int num) 
+  { return atof(partMSG[num]); }
+
+bool Sim800L::equals(int num, const char* comp)  // сравнить подстроку с другой строкой
+  { return !strcmp(partMSG[num], comp);  }  
 
 #if (DEBUGING == sim800)
 #undef DEBUGING
