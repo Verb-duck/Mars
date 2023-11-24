@@ -186,13 +186,16 @@ void Sim800L::checkList()
     if (attempt == 5)
     {
       PRINT("prepareForSmsReceive", "ERROR");
-      return ;
+      break;;
     }
     delay(1000);
   }
   attempt = 0;
   PRINT("prepareForSmsReceive", "OK");
+  //уровень заряда акб
+  getChargeLevelBattery();
 }
+
 
 /*
  * AT+CSCLK=0	Disable slow clock, module will not enter sleep mode.
@@ -340,6 +343,24 @@ int Sim800L::getSignalQuality()
     return numberSearch(_readSerial());
 }
 
+int Sim800L::getChargeLevelBattery() 
+{
+  this->SoftwareSerial::print(F("AT+CBC\r\n "));
+  String str = _readSerial();
+  if(str.indexOf("ERR"))
+  {
+  PRINT("akb level",str);
+    return - 1;
+  }
+  else 
+  {
+
+  PRINT("akb level",_readSerial() );
+  }
+  return 1;
+}
+
+
 bool Sim800L::calculateLocation()
 {
     /*
@@ -385,8 +406,8 @@ bool Sim800L::calculateLocation()
 
     return true;
 
-}
 
+}
 String Sim800L::getLocationCode()
 {
     return _locationCode;

@@ -128,6 +128,7 @@ public:
     bool getSleepMode();
     bool setFunctionalityMode(uint8_t fun);
     uint8_t getFunctionalityMode();
+    int getChargeLevelBattery();
 
     bool statusPin ();
     void setPIN(String pin);
@@ -138,8 +139,6 @@ public:
     String getOperatorsList();
     String getOperator();
     int getSignalQuality();
-
-    //int 
 
     bool calculateLocation();
     String getLocationCode();
