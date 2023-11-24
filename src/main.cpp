@@ -1,6 +1,6 @@
 
 #define DEBUGING 1
-#define PHONE_NUMBER "+79522220302"
+#define PHONE_NUMBER "+79098087076"
 
 
 #include <Arduino.h>

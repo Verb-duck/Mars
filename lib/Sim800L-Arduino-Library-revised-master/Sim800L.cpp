@@ -364,6 +364,19 @@ int Sim800L::getChargeLevelBattery()
   return -1;
 }
 
+int Sim800L::getVoltageBattery()
+{
+  this->SoftwareSerial::print(F("AT+CBC\r\n "));
+  if(_readSerialChar())
+  {
+    //if(equals(0 , "ERROR"))
+    return atoll(partMSG[2]);
+  }
+  return -1;
+}
+
+
+
 
 bool Sim800L::calculateLocation()
 {

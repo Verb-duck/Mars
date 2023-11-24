@@ -140,6 +140,7 @@ public:
   bool setFunctionalityMode(uint8_t fun);
   uint8_t getFunctionalityMode();
   int getChargeLevelBattery();
+  int getVoltageBattery();
 
   bool statusPin ();
   void setPIN(String pin);
@@ -176,6 +177,7 @@ public:
   void deactivateBearerProfile();
   //bool setMode();
 
+  
   void RTCtime(int *day,int *month, int *year,int *hour,int *minute, int *second);
   String dateNet();
   bool updateRtc(int utc);
