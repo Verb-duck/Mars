@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"name": "Mars",
+			"path": "."
+		}
+	],
+  "settings": {
+    "files.associations": {
+      "*.tcc": "cpp",
+      "streambuf": "cpp"
+    }
+  }
+}

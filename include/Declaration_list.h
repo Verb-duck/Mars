@@ -69,13 +69,16 @@ void sendSetupSms()
     message += "pre: ";
     dtostrf(bme.readPressure(), DEC, 1, temp);
     message += temp;
-    message += "% ";
-  }
+    message += "%. ";
+    //time
+    message += " Date:";
+    message += GSM.RTCtime();
 
   GSM.sendSms(PHONE_NUMBER,message.c_str());
 
   Serial.print("text sms  ");
   Serial.println(message );
+  }
 
 
 int64_t numberSearch(const String &strSearch)

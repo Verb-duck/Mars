@@ -531,7 +531,7 @@ String Sim800L::signalQuality()
     return(_readSerial());
 }
 
-
+//открытие GPRS соединения
 void Sim800L::activateBearerProfile()
 {
     this->SoftwareSerial::print (F(" AT+SAPBR=3,1,\"CONTYPE\",\"GPRS\" \r\n" ));
@@ -546,7 +546,7 @@ void Sim800L::activateBearerProfile()
     _buffer=_readSerial(); 			// get context ip address
 }
 
-
+//закрытие GPRS соединения
 void Sim800L::deactivateBearerProfile()
 {
     this->SoftwareSerial::print (F("AT+SAPBR=0,1\r\n "));
@@ -594,7 +594,6 @@ uint8_t Sim800L::getCallStatus()
     return _buffer.substring(_buffer.indexOf("+CPAS: ")+7,_buffer.indexOf("+CPAS: ")+9).toInt();
 
 }
-
 
 
 bool Sim800L::hangoffCall()
@@ -678,7 +677,6 @@ const uint8_t Sim800L::checkForSMS()
 	 return _buffer.substring(_buffer.indexOf(',')+1).toInt();
 }
 
-
 String Sim800L::getNumberSms(uint8_t index)
 {
     _buffer=readSms(index);
@@ -694,8 +692,6 @@ String Sim800L::getNumberSms(uint8_t index)
         return "";
     }
 }
-
-
 
 String Sim800L::readSms(uint8_t index)
 {
@@ -722,7 +718,6 @@ String Sim800L::readSms(uint8_t index)
     return _buffer.substring(first, second);
 }
 
-
 bool Sim800L::delAllSms()
 {
     // Can take up to 25 seconds
@@ -738,7 +733,7 @@ bool Sim800L::delAllSms()
     // Error NOT found, return 0
 }
 
-
+//текещую время и дату модуля
 void Sim800L::RTCtime(int *day,int *month, int *year,int *hour,int *minute, int *second)
 {
     this->SoftwareSerial::print(F("at+cclk?\r\n"));
@@ -760,8 +755,25 @@ void Sim800L::RTCtime(int *day,int *month, int *year,int *hour,int *minute, int 
         *second=_buffer.substring(15,17).toInt();
     }
 }
+String Sim800L::RTCtime ()
+{
+  this->SoftwareSerial::print(F("at+cclk?\r\n"));
+    // if respond with ERROR try one more time.
+    _buffer=_readSerial();
+    if ((_buffer.indexOf("ERR"))!=-1)
+    {
+        delay(50);
+        this->SoftwareSerial::print(F("at+cclk?\r\n"));
+    }
+    if ((_buffer.indexOf("ERR"))==-1)
+    {
+        _buffer=_buffer.substring(_buffer.indexOf("\"")+1,_buffer.lastIndexOf("\"")-1);
+        return _buffer;
+    }
+    return "";
+}
 
-//Get the time  of the base of GSM
+//Get the time  of the base of GSM, возврат времени по гринвичу
 String Sim800L::dateNet()
 {
     this->SoftwareSerial::print(F("AT+CIPGSMLOC=2,1\r\n "));

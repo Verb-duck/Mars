@@ -1,7 +1,7 @@
 
 #define DEBUGING 1
 #define PHONE_NUMBER "+79098087076"
-
+#define TIME_ZONE 3   //часовой пояс
 
 #include <Arduino.h>
 #include "EEPROM_memory.h"
@@ -28,6 +28,7 @@ void setup() {
   Serial.println("Start ESP!");
   GSM.begin(115200);
   GSM.checkList();
+  GSM.updateRtc(TIME_ZONE);         //возращает время по гринвичу с поправкой на TIME_ZONE
   bme.setMode(FORCED_MODE);         //датчик спит, измерения после вызова .oneMeasurement()
   bme.begin(); 
   memory.update(1);                 //чтение/сохранение EEProm, для сброса значений сменить число

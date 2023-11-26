@@ -157,9 +157,9 @@ public:
   String getLongitude();
   String getLatitude();
 
-  bool answerCall();
+  bool answerCall();                //Ответить на входящий голосовой вызов.
   void callNumber(char* number);
-  bool hangoffCall();
+  bool hangoffCall();               //Разъединение голосового вызова.ф
   uint8_t getCallStatus();
 
   const uint8_t checkForSMS();    
@@ -173,12 +173,23 @@ public:
 
   String signalQuality();
   void setPhoneFunctionality();
-  void activateBearerProfile();
-  void deactivateBearerProfile();
+  void activateBearerProfile();           //открытие GPRS соединения
+  void deactivateBearerProfile();         //закрытие GPRS соединения
   //bool setMode();
 
-  
+  //rtc
+  struct RTCdate {
+    int day;
+    int month;
+    int year;
+    int hour;
+    int minute;
+    int second;
+  } time;
+
+
   void RTCtime(int *day,int *month, int *year,int *hour,int *minute, int *second);
+  String RTCtime();
   String dateNet();
   bool updateRtc(int utc);
 
