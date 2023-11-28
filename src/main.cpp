@@ -1,7 +1,8 @@
 
 #define DEBUGING 1
-#define PHONE_NUMBER "+79098087076"
-#define TIME_ZONE 3   //часовой пояс
+#define KEY_EEPROM 1      //для сброса EEPROM памяти, поменять число, сохранятся значения присвоенные при инициализации переменных
+#define PHONE_NUMBER "+79522220302"     //номер для смс  уведомлений
+#define TIME_ZONE 3                      //часовой пояс
 
 #include <Arduino.h>
 #include "EEPROM_memory.h"
@@ -31,7 +32,7 @@ void setup() {
   GSM.updateRtc(TIME_ZONE);         //возращает время по гринвичу с поправкой на TIME_ZONE
   bme.setMode(FORCED_MODE);         //датчик спит, измерения после вызова .oneMeasurement()
   bme.begin(); 
-  memory.update(1);                 //чтение/сохранение EEProm, для сброса значений сменить число
+  memory.update(KEY_EEPROM);                 //чтение/сохранение данных из EEPRom памяти 
   sendSetupSms();                   //отправка заряда, значений с датчика 
 }
 
