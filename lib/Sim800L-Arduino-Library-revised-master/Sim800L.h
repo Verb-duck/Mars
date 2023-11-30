@@ -179,16 +179,15 @@ public:
   String getNumberSms(uint8_t index);
   bool delAllSms();
 
-  String signalQuality();
   void setPhoneFunctionality();
   void activateBearerProfile();           //открытие GPRS соединения
   void deactivateBearerProfile();         //закрытие GPRS соединения
   //bool setMode();
 
-  String getRtc();
-  void updateRtc();
-  String dateNet();
-  bool updateRtcGSM(int utc);
+  String getRtc();    //получение дата время строкой из модуля
+  void updateRtc();   //получение времени и даты из модуля в переменные
+  String dateNet();   //Get the time  of the base of GSM, возврат времени по гринвичу
+  bool updateRtcGSM(int utc);   //обновление время и дата модуля из инета с поправкой на часовой пояс
 
 };
 

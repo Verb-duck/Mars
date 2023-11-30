@@ -351,6 +351,19 @@ String Sim800L::getOperator()
 
 int Sim800L::getSignalQuality()
 {
+  /*Response
+    +CSQ: <rssi>,<ber>Parameters
+    <rssi>
+    0 -115 dBm or less
+    1 -111 dBm
+    2...30 -110... -54 dBm
+    31 -52 dBm or greater
+    99 not known or not detectable
+    <ber> (in percent):
+    0...7 As RXQUAL values in the table in GSM 05.08 [20]
+    subclause 7.2.4
+    99 Not known or not detectable
+    */
   this->SoftwareSerial::print(F("AT+CSQ\r\n "));
   if(_readSerialChar())
   {
@@ -548,25 +561,6 @@ void Sim800L::setPhoneFunctionality()
     this->SoftwareSerial::print (F("AT+CFUN=1\r\n"));
 }
 
-
-String Sim800L::signalQuality()
-{
-    /*Response
-    +CSQ: <rssi>,<ber>Parameters
-    <rssi>
-    0 -115 dBm or less
-    1 -111 dBm
-    2...30 -110... -54 dBm
-    31 -52 dBm or greater
-    99 not known or not detectable
-    <ber> (in percent):
-    0...7 As RXQUAL values in the table in GSM 05.08 [20]
-    subclause 7.2.4
-    99 Not known or not detectable
-    */
-    this->SoftwareSerial::print (F("AT+CSQ\r\n"));
-    return(_readSerial());
-}
 
 //открытие GPRS соединения
 void Sim800L::activateBearerProfile()
