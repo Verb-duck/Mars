@@ -64,6 +64,7 @@
 //SoftwareSerial SIM(rx_pin,tx_pin);
 //String _buffer;
 
+
 Sim800L::Sim800L(void) : SoftwareSerial(DEFAULT_RX_PIN, DEFAULT_TX_PIN)
 {
     rx_pin 		= DEFAULT_RX_PIN;
@@ -109,8 +110,7 @@ void Sim800L::begin(uint32_t baud)
 {
 
     pinMode(reset_pin, OUTPUT);
-    digitalWrite(reset_pin,1);
-
+    digitalWrite(reset_pin,HIGH);       //перезагрузка при подаче сигнала низкого уровня
     _baud = baud;
     this->SoftwareSerial::begin(_baud);
 
@@ -126,71 +126,86 @@ void Sim800L::checkList()
 {
   String str;
   byte attempt = 0;
+  
  //проверяем готовность модуля к приему команд.
   this->SoftwareSerial::print(F("AT\r\n "));    //костыль, без него
   _readSerial();                                //сразу перезагружает
   this->SoftwareSerial::print(F("AT\r\n "));
-  while(_readSerial().indexOf("OK")==-1)    //перезагружаем модуль, если не алё
+  if(_readSerial().indexOf("OK")==-1)    //перезагружаем модуль, если не алё
   {
-    attempt++;
-    reset();
-    PRINT("sim800", "well be rebooting");
-    if (attempt == 5)
+    if(!reset())      
     {
-      PRINT("sim800 doesn't answer", "");
       return ;
     }
-    this->SoftwareSerial::print(F("AT\r\n"));
-  }  
-  PRINT("sim800 answered","OK");
-  attempt = 0;
+  } 
+  Serial.println("sim800 answered: OK" ) ;
+
  //Отключить эхо AT-команд.
   this->SoftwareSerial::print(F("ATE0\r\n "));
   if(_readSerial().indexOf("OK")!=-1)
-  {PRINT("echo off","OK");}  
-  else {PRINT("echo off","NO");}
-  //проверяем готовность и текущее состояние модуля.
-  this->SoftwareSerial::print(F("AT+CPAS?\r\n ")); 
-  while(_readSerial()[9] != 0)  
-  {
-    attempt++;
-    reset();
-    if (attempt == 5)
-    {
-      PRINT("status mobile devise", "ERROR");
-      return; ;
-    }
-    delay(1000);
-    this->SoftwareSerial::print(F("AT+CREG?\r\n ")); 
-  } 
-  attempt = 0; 
-  PRINT("status mobile devise","OK");  
+    Serial.println("echo off OK");
+  else 
+    Serial.println("echo off NO");
+  
+  //уровень заряда акб
+  Serial.print("battery level: ");
+  Serial.println(getChargeLevelBattery());
+  
   // //проверка пинкода, ввод.
   // if(statusPin()){  
   //   enterPin();
   // }
-  //проверка регистрации в сети
-  this->SoftwareSerial::print(F("AT+CPAS?\r\n "));
-  if(_readSerial().indexOf("OK")!=-1)
-    {PRINT("mobile network","OK");}  
-  else {PRINT("mobile network","ERROR");}
-  //Запрос уровня сигнала:
-  PRINT("signal quality",getSignalQuality()); 
-  //подготовка смс
-  while(!prepareForSmsReceive())
-  {
-    attempt++;
-    if (attempt == 5)
-    {
-      PRINT("prepareForSmsReceive", "ERROR");
-      break;;
-    }
-    delay(1000);
+
+  //проверяем готовность и текущее состояние модуля.
+  this->SoftwareSerial::print(F("AT+CPAS\r\n "));
+    /*Информация о состояние модуля
+      +CPAS: 0 OK
+      0 – готов к работе
+      2 – неизвестно
+      3 – входящий звонок
+      4 – голосовое соединение*/
+  if(_readSerial().indexOf("OK")==-1)  
+  { 
+    Serial.println("status communication module  ERROR");
+    return;
   }
-  attempt = 0;
-  PRINT("prepareForSmsReceive", "OK");
-  //уровень заряда акб
-  PRINT("battery level", getChargeLevelBattery());
+  else      //если всё ок, продолжаем проверку модуля 
+  { 
+    Serial.println("status communication module  OK");
+    
+    //проверка регистрации в сети
+    Serial.println(registrationInNetwork());
+
+    //Запрос уровня сигнала:
+    PRINT("signal quality",getSignalQuality()); 
+
+    //установка времени в модуль
+      Serial.print("time update: ");
+    if(updateRtcGSM(3))
+    {
+      Serial.println("OK");
+      //RTCtime();
+    }
+    else Serial.println("ERROR");
+      // Serial.print(time.hour + ":");
+      // Serial.print( time.minute + ":");
+      // Serial.print(time.second) ;//+" "+time.day+"."+time.month+"."+time.year );
+ 
+    //подготовка смс
+    while(!prepareForSmsReceive())
+    {
+      attempt++;
+      if (attempt == 5)
+      {
+        PRINT("prepareForSmsReceive", "ERROR");
+        break;;
+      }
+      delay(1000);
+    }
+    attempt = 0;
+    PRINT("prepareForSmsReceive", "OK");
+  }
+
 }
 
 
@@ -336,15 +351,47 @@ String Sim800L::getOperator()
 
 int Sim800L::getSignalQuality()
 {
-  this->SoftwareSerial::print(F("AT+CSQ?\r\n "));
+  this->SoftwareSerial::print(F("AT+CSQ\r\n "));
   if(_readSerialChar())
   {
-    //if(equals(0 , "ERROR"))
-    return atoll(partMSG[0]);
+    return atoi(partMSG[1]);
   }
   return -1;
 }
 
+//проверка регистрации в сети
+String Sim800L::registrationInNetwork() 
+{
+  byte attempt = 0;
+  while(1)
+  {
+    this->SoftwareSerial::print(F("AT+CREG?\r\n "));
+    if(_readSerialChar())
+    {
+      //2ой параметр
+      switch (getInt(2)) {
+        case 0:
+          return "not registered on the network";
+        case 1:
+          return "registered,home network";
+        case 2:     //поиск сети
+            attempt++;
+            delay(500);
+            if(attempt == 14)     //ждём 7 сек, и идём дальше
+            {
+              return "not registered,the search for a new network will continue";
+            }
+          break;
+        case 3:
+          return "registration rejected";
+        case 5:
+          return "roaming";
+        default:
+          break;        
+      }
+    }
+  }
+}
 int Sim800L::getChargeLevelBattery() 
 {
   this->SoftwareSerial::print(F("AT+CBC\r\n "));
@@ -359,7 +406,7 @@ int Sim800L::getChargeLevelBattery()
   if(_readSerialChar())
   {
     //if(equals(0 , "ERROR"))
-    return atoll(partMSG[1]);
+    return atoll(partMSG[2]);
   }
   return -1;
 }
@@ -456,7 +503,7 @@ String Sim800L::getLatitude()
 //PUBLIC METHODS
 //
 
-void Sim800L::reset()
+bool Sim800L::reset()
 {
   PRINT("restart sim800",);
   if (LED_FLAG) digitalWrite(led_pin,1);
@@ -469,26 +516,16 @@ void Sim800L::reset()
   byte attempt = 0;
   while (_readSerial().indexOf("OK")==-1 )
   {
-      attempt++;
-      this->SoftwareSerial::print(F("AT\r\n"));
-      if(attempt == 5) {
-        attempt = 0;  
-        return;
-      }       
-  }
-
-  //wait for sms ready
-  while (_readSerial().indexOf("SMS")==-1 ) {
     attempt++;
-      if(attempt == 5) {
-        attempt = 0;  
-        return;
-      }  
+    if(attempt == 5) {
+      PRINT("sim800 doesn't answer", "");
+      return false;
+    }       
+    this->SoftwareSerial::print(F("AT\r\n"));
   }
-
   if (LED_FLAG) digitalWrite(led_pin,0);
+  return true;
 }
-
 
 String  Sim800L::readMessage(){
   
@@ -639,7 +676,7 @@ bool Sim800L::sendSms(const char* number,const char* text)
     // Error NOT found, return 0
 }
 
-
+//AT+CUSD=1,"*111#" – проверяем баланс SIM-карты.
 bool Sim800L::prepareForSmsReceive()
 {
 	// Configure SMS in text mode
@@ -733,8 +770,7 @@ bool Sim800L::delAllSms()
     // Error NOT found, return 0
 }
 
-//текещую время и дату модуля
-void Sim800L::RTCtime(int *day,int *month, int *year,int *hour,int *minute, int *second)
+String Sim800L::getRtc()
 {
     this->SoftwareSerial::print(F("at+cclk?\r\n"));
     // if respond with ERROR try one more time.
@@ -743,34 +779,43 @@ void Sim800L::RTCtime(int *day,int *month, int *year,int *hour,int *minute, int 
     {
         delay(50);
         this->SoftwareSerial::print(F("at+cclk?\r\n"));
+        _buffer=_readSerial();
+
     }
     if ((_buffer.indexOf("ERR"))==-1)
     {
-        _buffer=_buffer.substring(_buffer.indexOf("\"")+1,_buffer.lastIndexOf("\"")-1);
-        *year=_buffer.substring(0,2).toInt();
-        *month= _buffer.substring(3,5).toInt();
-        *day=_buffer.substring(6,8).toInt();
-        *hour=_buffer.substring(9,11).toInt();
-        *minute=_buffer.substring(12,14).toInt();
-        *second=_buffer.substring(15,17).toInt();
+        _buffer=_buffer.substring(_buffer.indexOf("\"")+1,_buffer.lastIndexOf("\"")-3);
+        //меняем день и год в строке местами
+        _buffer[0] = _buffer[0] + _buffer[6] - (_buffer[6] = _buffer[0]);
+        _buffer[1] = _buffer[1] + _buffer[7] - (_buffer[7] = _buffer[1]);
+        return _buffer;
     }
+    return "";
 }
-String Sim800L::RTCtime ()
+
+//обновление переменных с временем и датой из модуля
+void Sim800L::updateRtc()
 {
-  this->SoftwareSerial::print(F("at+cclk?\r\n"));
+    this->SoftwareSerial::print(F("at+cclk?\r\n"));
     // if respond with ERROR try one more time.
     _buffer=_readSerial();
     if ((_buffer.indexOf("ERR"))!=-1)
     {
         delay(50);
         this->SoftwareSerial::print(F("at+cclk?\r\n"));
+        _buffer=_readSerial();
+
     }
     if ((_buffer.indexOf("ERR"))==-1)
     {
-        _buffer=_buffer.substring(_buffer.indexOf("\"")+1,_buffer.lastIndexOf("\"")-1);
-        return _buffer;
+        _buffer=_buffer.substring(_buffer.indexOf("\"")+1,_buffer.lastIndexOf("\"")-3);
+        year=_buffer.substring(0,2).toInt();
+        month= _buffer.substring(3,5).toInt();
+        day=_buffer.substring(6,8).toInt();
+        hour=_buffer.substring(9,11).toInt();
+        minute=_buffer.substring(12,14).toInt();
+        second=_buffer.substring(15,17).toInt();
     }
-    return "";
 }
 
 //Get the time  of the base of GSM, возврат времени по гринвичу
@@ -788,7 +833,7 @@ String Sim800L::dateNet()
 }
 
 // Update the RTC of the module with the date of GSM.
-bool Sim800L::updateRtc(int utc)
+bool Sim800L::updateRtcGSM(int utc)
 {
 
     activateBearerProfile();
@@ -833,9 +878,9 @@ bool Sim800L::updateRtc(int utc)
     //for debugging
     //Serial.println("at+cclk=\""+dt.substring(2,4)+"/"+dt.substring(5,7)+"/"+tmp_day+","+tmp_hour+":"+tm.substring(3,5)+":"+tm.substring(6,8)+"-03\"\r\n");
     this->SoftwareSerial::print("at+cclk=\""+dt.substring(2,4)+"/"+dt.substring(5,7)+"/"+tmp_day+","+tmp_hour+":"+tm.substring(3,5)+":"+tm.substring(6,8)+"-03\"\r\n");
-    if ( (_readSerial().indexOf("ER"))!=-1)
-    {
-        return true;
+    if ( (_readSerial().indexOf("ER")) ==-1)
+    {      
+      return true;
     }
     else return false;
 
@@ -895,6 +940,7 @@ String Sim800L::_readSerial(uint32_t timeout)
 
 }
 
+//чтение входящего буфера с разделением на подстроки
 bool Sim800L::_readSerialChar()
 {
   bool result = false;
@@ -918,6 +964,12 @@ bool Sim800L::_readSerialChar()
   {
     result = true;
     char ch  = this->SoftwareSerial::read();
+    if(ch == ':') 
+    {
+      _buf[_countBuff++] = '\0';
+      partMSG[_countDivBuff++]=_buf + _countBuff;   //запоминаем начало след разделенной строки
+      continue;
+    }
     if(ch == _divider)                            //если разделитель, 
     {
       _buf[_countBuff++] = '\0';

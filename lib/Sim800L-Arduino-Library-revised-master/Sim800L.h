@@ -76,6 +76,7 @@
 #define TIME_OUT_READ_SERIAL	5000
 #define BUFFER_INCOMING_SIZE 30
 
+#define TIME_ZONE 
 #if (DEBUGING)
 #define PRINT(title, y) \
   Serial.print(title); \
@@ -102,7 +103,7 @@ private:
 
   //read serial sim800  
   char _buf[BUFFER_INCOMING_SIZE];    //буфер входяшего сообщения
-  char **partMSG = new char*[10];                  //буфер разделенных строк 
+  char **partMSG = new char*[10];            //буфер разделенных строк 
   byte _countDivBuff = 0;             //количество подстрок
   char _divider = ',';                //символ для разделения строки на подстроки 
   String _readSerial();
@@ -121,6 +122,12 @@ public:
   uint8_t reset_pin;
   uint8_t led_pin;
   bool	LED_FLAG;
+  int day;
+  int month;
+  int year;
+  int hour;
+  int minute;
+  int second;
 
   Sim800L(void);
   Sim800L(uint8_t rx, uint8_t tx);
@@ -129,7 +136,7 @@ public:
 
   void begin();					//Default baud 9600
   void begin(uint32_t baud);
-  void reset();
+  bool reset();
   void checkList();
   
   String readMessage();
@@ -151,6 +158,7 @@ public:
   String getOperatorsList();
   String getOperator();
   int getSignalQuality();
+  String registrationInNetwork();     //проверка регистрации в сети
 
   bool calculateLocation();
   String getLocationCode();
@@ -177,22 +185,12 @@ public:
   void deactivateBearerProfile();         //закрытие GPRS соединения
   //bool setMode();
 
-  //rtc
-  struct RTCdate {
-    int day;
-    int month;
-    int year;
-    int hour;
-    int minute;
-    int second;
-  } time;
-
-
-  void RTCtime(int *day,int *month, int *year,int *hour,int *minute, int *second);
-  String RTCtime();
+  String getRtc();
+  void updateRtc();
   String dateNet();
-  bool updateRtc(int utc);
+  bool updateRtcGSM(int utc);
 
 };
+
 
 #endif

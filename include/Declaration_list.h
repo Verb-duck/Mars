@@ -38,47 +38,43 @@ void waitingSMS() {
 void sendSetupSms()
 {
   String message;
-  //if( GSM.getVoltageBattery() > 3800)
-  
-    //заряд батареи
-    message += "battery: ";
-    char temp[5];
-    itoa(GSM.getChargeLevelBattery(),temp,10);
-    message += temp;
-    message += "% ";
+  //заряд батареи
+  message += "battery: ";
+  char temp[5];
+  itoa(GSM.getChargeLevelBattery(),temp,10);
+  message += temp;
+  message += "% ";
 
-    //уровень сигнала
-    message += "signal: ";
-    itoa(GSM.getSignalQuality(),temp,10);
-    message += temp;
-    message += " ";
+  //уровень сигнала
+  message += "signal: ";
+  itoa(GSM.getSignalQuality(),temp,10);
+  message += temp;
+  message += " ";
 
-    bme.oneMeasurement();          // Просим датчик проснуться и сделать одно преобразование
-    while (bme.isMeasuring());     // Ждем окончания преобразования
-    //температура
-    message += "temper ";
-    dtostrf(bme.readTemperature(), DEC, 1, temp);
-    message += temp;
-    message += "*C ";
-    //влажность
-    message += "hum: ";
-    dtostrf(bme.readHumidity(), DEC, 1, temp);
-    message += temp;
-    message += "% ";
-    //давление
-    message += "pre: ";
-    dtostrf(bme.readPressure(), DEC, 1, temp);
-    message += temp;
-    message += "%. ";
-    //time
-    message += " Date:";
-    message += GSM.RTCtime();
+  bme.oneMeasurement();          // Просим датчик проснуться и сделать одно преобразование
+  while (bme.isMeasuring());     // Ждем окончания преобразования
+  //температура
+  message += "temper ";
+  dtostrf(bme.readTemperature(), 3, 1, temp);
+  message += temp;
+  message += "*C ";
+  //влажность
+  message += "hum: ";
+  dtostrf(bme.readHumidity(), 3, 1, temp);
+  message += temp;
+  message += "% ";
+  //давление
+  message += "pre: ";
+  dtostrf(bme.readPressure(), 4, 1, temp);
+  message += temp;
+  message += "%.  ";
+  //time
+  message += GSM.getRtc();
 
-  GSM.sendSms(PHONE_NUMBER,message.c_str());
-
+  // GSM.sendSms(PHONE_NUMBER,message.c_str());
   Serial.print("text sms  ");
   Serial.println(message );
-  }
+}
 
 
 int64_t numberSearch(const String &strSearch)
