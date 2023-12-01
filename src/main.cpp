@@ -3,6 +3,7 @@
 #define KEY_EEPROM 1      //для сброса EEPROM памяти, поменять число, сохранятся значения присвоенные при инициализации переменных
 #define PHONE_NUMBER "+79522220302"     //номер для смс  уведомлений
 #define TIME_ZONE 3                      //часовой пояс
+#define SEND_SMS 0        //отправка смс при запуске, да/нет
 
 #include <Arduino.h>
 #include "EEPROM_memory.h"
@@ -31,8 +32,8 @@ void setup() {
   GSM.checkList();
   bme.setMode(FORCED_MODE);         //датчик спит, измерения после вызова .oneMeasurement()
   bme.begin(); 
-  //memory.update(KEY_EEPROM);                 //чтение/сохранение данных из EEPRom памяти 
-  sendSetupSms();                   //отправка заряда, значений с датчика 
+  //memory.update(KEY_EEPROM);      //чтение/сохранение данных из EEPRom памяти 
+  sendSetupSms(SEND_SMS);           //отправка заряда, значений с датчика 
   
 }
 

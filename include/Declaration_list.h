@@ -35,7 +35,7 @@ void waitingSMS() {
 }
 
 
-void sendSetupSms()
+void sendSetupSms(byte send)
 {
   String message;
   char temp[5];
@@ -78,7 +78,8 @@ void sendSetupSms()
   //time
   message += GSM.getRtc();
 
-  GSM.sendSms(PHONE_NUMBER,message.c_str());
+  if( send != 0)
+    GSM.sendSms(PHONE_NUMBER,message.c_str());
   Serial.print("text sms  ");
   Serial.println(message );
 }
