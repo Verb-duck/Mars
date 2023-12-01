@@ -71,7 +71,7 @@ void sendSetupSms()
   //time
   message += GSM.getRtc();
 
-  // GSM.sendSms(PHONE_NUMBER,message.c_str());
+  GSM.sendSms(PHONE_NUMBER,message.c_str());
   Serial.print("text sms  ");
   Serial.println(message );
 }
