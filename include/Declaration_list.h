@@ -45,13 +45,13 @@ void sendSetupSms(byte send)
   itoa(GSM.getChargeLevelBattery(),temp,10);
   message += temp;
   message += "%";
-  message += ", v= ";
+  message += ", v: ";
   itoa(GSM.getVoltageBattery(),temp,10);
   message += temp;
   message += "mv";
 
   //уровень сигнала
-  message += " /rssi: ";
+  message += "/ rssi: ";
   itoa(GSM.getSignalQuality(),temp,10);
   message += temp;
   message += ", ber: ";
@@ -61,7 +61,7 @@ void sendSetupSms(byte send)
   bme.oneMeasurement();          // Просим датчик проснуться и сделать одно преобразование
   while (bme.isMeasuring());     // Ждем окончания преобразования
   //температура
-  message += " /t: ";
+  message += "/ t: ";
   dtostrf(bme.readTemperature(), 3, 1, temp);
   message += temp;
   message += "*C";
@@ -74,7 +74,7 @@ void sendSetupSms(byte send)
   message += ", p: ";
   dtostrf(bme.readPressure(), 4, 1, temp);
   message += temp;
-  message += "mm Hg/  ";
+  message += "mm Hg/ ";
   //time
   message += GSM.getRtc();
 

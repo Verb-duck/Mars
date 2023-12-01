@@ -123,8 +123,6 @@ void Sim800L::begin(uint32_t baud)
 
   _buffer.reserve(BUFFER_RESERVE_MEMORY); // Reserve memory to prevent intern fragmention
 
-  _saveSettingsInEEPROM();
-  
 }
 
 void Sim800L::checkList()
@@ -188,12 +186,20 @@ void Sim800L::checkList()
     Serial.println(getSignalBer());
 
     //установка времени в модуль
-      Serial.print("time update: ");
-    if(updateRtcGSM(3))
-    {
+    Serial.print("date/time update ");
+    setSettingRtcMobilNetwork();    
+    updateRtc();
+    if(year != 4)               //date/time updated
       Serial.println("OK");
+    else                        //date/time not updated
+    {
+      Serial.println("the mobile operator did not provide the date/time,");
+      if(updateRtcGSM(3))       //recieve date/time from network
+      {
+        Serial.println("the date/time updated from the network");
+      }
+      else Serial.println("the date/time dont update");
     }
-    else Serial.println("ERROR");
  
     //подготовка смс
     while(!prepareForSmsReceive())
@@ -835,7 +841,7 @@ void Sim800L::updateRtc()
 }
 
 //Get the time  of the base of GSM, возврат времени по гринвичу
-String Sim800L::dateNet()
+String Sim800L::_dateNet()
 {
     this->SoftwareSerial::print(F("AT+CIPGSMLOC=2,1\r\n "));
     _buffer=_readSerial();
@@ -853,7 +859,7 @@ bool Sim800L::updateRtcGSM(int utc)
 {
 
     activateBearerProfile();
-    _buffer=dateNet();    
+    _buffer=_dateNet();    
     deactivateBearerProfile();
 
     _buffer=_buffer.substring(_buffer.indexOf(",")+1,_buffer.length());
@@ -900,7 +906,6 @@ bool Sim800L::updateRtcGSM(int utc)
     this->SoftwareSerial::print("at+cclk=\""+dt.substring(2,4)+"/"+dt.substring(5,7)+"/"+tmp_day+","+tmp_hour+":"+tm.substring(3,5)+":"+tm.substring(6,8)+"-03\"\r\n");
     if ( (_readSerial().indexOf("ER")) ==-1)
     {  
-
       return true;
     }
     else return false;
@@ -908,7 +913,18 @@ bool Sim800L::updateRtcGSM(int utc)
 
 }
 
-
+void Sim800L::setSettingRtcMobilNetwork()
+{
+  this->SoftwareSerial::print(F("AT+CLTS?\r\n "));
+  _readSerialChar();
+  if(getInt(1) == 0)    //if AT+CLTS == 0, set AT+CLTS = 1
+  {
+    this->SoftwareSerial::print(F("AT+CLTS=1\r\n "));
+    if ( (_readSerial().indexOf("ER")) ==-1)
+      if(_saveSettingsInEEPROM());
+        this->SoftwareSerial::print(F("AT+CFUN=1\r\n "));  //command for resseting
+  }
+}
 
 //
 //PRIVATE METHODS

@@ -186,10 +186,13 @@ public:
   //bool setMode();
 
   String getRtc();    //получение дата время строкой из модуля
-  void updateRtc();   //получение времени и даты из модуля в переменные
-  String dateNet();   //Get the time  of the base of GSM, возврат времени по гринвичу
+  void updateRtc();   //получение времени и даты из модуля в переменные day, month, hour и т.д.
   bool updateRtcGSM(int utc);   //обновление время и дата модуля из инета с поправкой на часовой пояс
-
+  private:
+  String _dateNet();   //Get the time  of the base of GSM, возврат времени по гринвичу
+  void setSettingRtcMobilNetwork();  
+    /* set the settings for to receive the time form mobile operator.
+    calling one time*/
 };
 
 
