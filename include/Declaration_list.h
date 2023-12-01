@@ -29,7 +29,12 @@ void waitingSMS() {
     if(str.indexOf("value"))          //если пришла смс с тестом value
     {
       value = numberSearch(str);      //сохранаяем в EEPROM значение
-    }
+    } 
+  	Serial.println(GSM.readSms(index));
+    if(str.indexOf("time zone"))          //если пришла смс с тестом value
+    {
+      time_zone = numberSearch(str);      //сохранаяем в EEPROM значение
+    } 
   	Serial.println(GSM.readSms(index));
   } 
 }
