@@ -177,19 +177,18 @@ void Sim800L::checkList()
     Serial.println(registrationInNetwork());
 
     //Запрос уровня сигнала:
-    PRINT("signal quality",getSignalQuality()); 
+    Serial.print("RSSI: ");
+    Serial.print(getSignalQuality());
+    Serial.print(", BER: ");
+    Serial.println(getSignalBer());
 
     //установка времени в модуль
       Serial.print("time update: ");
     if(updateRtcGSM(3))
     {
       Serial.println("OK");
-      //RTCtime();
     }
     else Serial.println("ERROR");
-      // Serial.print(time.hour + ":");
-      // Serial.print( time.minute + ":");
-      // Serial.print(time.second) ;//+" "+time.day+"."+time.month+"."+time.year );
  
     //подготовка смс
     while(!prepareForSmsReceive())
@@ -351,8 +350,7 @@ String Sim800L::getOperator()
 
 int Sim800L::getSignalQuality()
 {
-  /*Response
-    +CSQ: <rssi>,<ber>Parameters
+    /*+CSQ: <rssi>,<ber>Parameters
     <rssi>
     0 -115 dBm or less
     1 -111 dBm
@@ -368,6 +366,20 @@ int Sim800L::getSignalQuality()
   if(_readSerialChar())
   {
     return atoi(partMSG[1]);
+  }
+  return -1;
+}
+
+int Sim800L::getSignalBer() {
+    /*+CSQ: <rssi>,<ber>
+    <ber> — RXQUAL (мера качества сигнала), значение из таблицы GSM 05.08 — ETSI:
+    0...7 — коэффициент битовых ошибок (меньше — лучше)
+    99 определить невозможно
+    */
+  this->SoftwareSerial::print(F("AT+CSQ\r\n "));
+  if(_readSerialChar())
+  {
+    return atoi(partMSG[2]);
   }
   return -1;
 }
@@ -430,7 +442,7 @@ int Sim800L::getVoltageBattery()
   if(_readSerialChar())
   {
     //if(equals(0 , "ERROR"))
-    return atoll(partMSG[2]);
+    return atoll(partMSG[3]);
   }
   return -1;
 }
@@ -782,6 +794,8 @@ String Sim800L::getRtc()
         //меняем день и год в строке местами
         _buffer[0] = _buffer[0] + _buffer[6] - (_buffer[6] = _buffer[0]);
         _buffer[1] = _buffer[1] + _buffer[7] - (_buffer[7] = _buffer[1]);
+        _buffer[2] = '.';
+        _buffer[5] = '.';
         return _buffer;
     }
     return "";
@@ -831,7 +845,7 @@ bool Sim800L::updateRtcGSM(int utc)
 {
 
     activateBearerProfile();
-    _buffer=dateNet();
+    _buffer=dateNet();    
     deactivateBearerProfile();
 
     _buffer=_buffer.substring(_buffer.indexOf(",")+1,_buffer.length());
@@ -842,7 +856,6 @@ bool Sim800L::updateRtcGSM(int utc)
     int day = dt.substring(8,10).toInt();
 
     hour=hour+utc;
-
     String tmp_hour;
     String tmp_day;
     //TODO : fix if the day is 0, this occur when day is 1 then decrement to 1,
@@ -851,6 +864,11 @@ bool Sim800L::updateRtcGSM(int utc)
     {
         hour+=24;
         day-=1;
+    }
+    if (hour>24)
+    { 
+        hour-=24;
+        day+=1;
     }
     if (hour<10)
     {
@@ -873,7 +891,8 @@ bool Sim800L::updateRtcGSM(int utc)
     //Serial.println("at+cclk=\""+dt.substring(2,4)+"/"+dt.substring(5,7)+"/"+tmp_day+","+tmp_hour+":"+tm.substring(3,5)+":"+tm.substring(6,8)+"-03\"\r\n");
     this->SoftwareSerial::print("at+cclk=\""+dt.substring(2,4)+"/"+dt.substring(5,7)+"/"+tmp_day+","+tmp_hour+":"+tm.substring(3,5)+":"+tm.substring(6,8)+"-03\"\r\n");
     if ( (_readSerial().indexOf("ER")) ==-1)
-    {      
+    {  
+
       return true;
     }
     else return false;

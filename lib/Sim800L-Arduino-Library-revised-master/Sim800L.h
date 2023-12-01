@@ -157,8 +157,9 @@ public:
 
   String getOperatorsList();
   String getOperator();
-  int getSignalQuality();
   String registrationInNetwork();     //проверка регистрации в сети
+  int getSignalQuality();
+  int getSignalBer();
 
   bool calculateLocation();
   String getLocationCode();

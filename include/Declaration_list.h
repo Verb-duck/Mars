@@ -38,41 +38,48 @@ void waitingSMS() {
 void sendSetupSms()
 {
   String message;
+  char temp[5];
+
   //заряд батареи
   message += "battery: ";
-  char temp[5];
   itoa(GSM.getChargeLevelBattery(),temp,10);
   message += temp;
-  message += "% ";
+  message += "%";
+  message += ", v= ";
+  itoa(GSM.getVoltageBattery(),temp,10);
+  message += temp;
+  message += "mv";
 
   //уровень сигнала
-  message += "signal: ";
+  message += " /rssi: ";
   itoa(GSM.getSignalQuality(),temp,10);
   message += temp;
-  message += " ";
+  message += " ,ber: ";
+  itoa(GSM.getSignalBer(),temp,10);
+  message += temp;
 
   bme.oneMeasurement();          // Просим датчик проснуться и сделать одно преобразование
   while (bme.isMeasuring());     // Ждем окончания преобразования
   //температура
-  message += "temper ";
+  message += " /t: ";
   dtostrf(bme.readTemperature(), 3, 1, temp);
   message += temp;
-  message += "*C ";
+  message += "*C";
   //влажность
-  message += "hum: ";
+  message += " ,h: ";
   dtostrf(bme.readHumidity(), 3, 1, temp);
   message += temp;
-  message += "% ";
+  message += "%";
   //давление
-  message += "pre: ";
+  message += " ,p: ";
   dtostrf(bme.readPressure(), 4, 1, temp);
   message += temp;
-  message += "%.  ";
+  message += "mm Hg/  ";
   //time
   message += GSM.getRtc();
 
-  // GSM.sendSms(PHONE_NUMBER,message.c_str());
-  Serial.print("text sms  ");
+  //GSM.sendSms(PHONE_NUMBER,message.c_str());
+  Serial.print("text sms:  ");
   Serial.println(message );
 }
 

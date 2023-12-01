@@ -29,7 +29,6 @@ void setup() {
   Serial.println("Start ESP!");
   GSM.begin(115200);
   GSM.checkList();
-  //GSM.updateRtc(TIME_ZONE);         //возращает время по гринвичу с поправкой на TIME_ZONE
   bme.setMode(FORCED_MODE);         //датчик спит, измерения после вызова .oneMeasurement()
   bme.begin(); 
   //memory.update(KEY_EEPROM);                 //чтение/сохранение данных из EEPRom памяти 
