@@ -108,18 +108,20 @@ void Sim800L::begin()
 
 void Sim800L::begin(uint32_t baud)
 {
-
+  if(reset_pin 	!= DEFAULT_RESET_PIN)
+  {
     pinMode(reset_pin, OUTPUT);
     digitalWrite(reset_pin,HIGH);       //перезагрузка при подаче сигнала низкого уровня
-    _baud = baud;
-    this->SoftwareSerial::begin(_baud);
+  }
+  _baud = baud;
+  this->SoftwareSerial::begin(_baud);
 
-    _sleepMode = 0;
-    _functionalityMode = 1;
+  _sleepMode = 0;
+  _functionalityMode = 1;
 
-    if (LED_FLAG) pinMode(led_pin, OUTPUT);
+  if (LED_FLAG) pinMode(led_pin, OUTPUT);
 
-    _buffer.reserve(BUFFER_RESERVE_MEMORY); // Reserve memory to prevent intern fragmention
+  _buffer.reserve(BUFFER_RESERVE_MEMORY); // Reserve memory to prevent intern fragmention
 }
 
 void Sim800L::checkList()
@@ -532,10 +534,13 @@ bool Sim800L::reset()
 {
   PRINT("restart sim800",);
   if (LED_FLAG) digitalWrite(led_pin,1);
-  digitalWrite(reset_pin,0);
-  delay(1000);
-  digitalWrite(reset_pin,1);
-  delay(2000);
+  if(reset_pin 	!= DEFAULT_RESET_PIN) 
+  {
+    digitalWrite(reset_pin,0);
+    delay(1000);
+    digitalWrite(reset_pin,1);
+    delay(2000);
+  }
   //wait for the module response
   this->SoftwareSerial::print(F("AT\r\n"));
   byte attempt = 0;

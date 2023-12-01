@@ -66,7 +66,7 @@
 
 #define DEFAULT_RX_PIN 		10
 #define DEFAULT_TX_PIN 		11
-#define DEFAULT_RESET_PIN 	2		// pin to the reset pin Sim800L
+#define DEFAULT_RESET_PIN 	15		// pin to the reset pin Sim800L
 
 #define DEFAULT_LED_FLAG	true 	// true: use led.	 false: don't user led.
 #define DEFAULT_LED_PIN 	13 		// pin to indicate states.
@@ -76,7 +76,6 @@
 #define TIME_OUT_READ_SERIAL	5000
 #define BUFFER_INCOMING_SIZE 30
 
-#define TIME_ZONE 
 #if (DEBUGING)
 #define PRINT(title, y) \
   Serial.print(title); \

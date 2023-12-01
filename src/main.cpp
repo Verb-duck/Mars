@@ -13,9 +13,9 @@
 //------пины------
 #define RX_PIN D6      //подключение GSM
 #define TX_PIN D7      //подключение GSM
-#define RESET_PIN D5   //пин для програмной перезагрузки модуля GSM
+//#define RESET_PIN D5   //пин для програмной перезагрузки модуля GSM
 
-Sim800L GSM(RX_PIN,TX_PIN,RESET_PIN);
+Sim800L GSM(RX_PIN,TX_PIN);
 GyverBME280 bme;      //на wemos подключен на SCL – D1, SDA – D2
 
 //------переменные----
