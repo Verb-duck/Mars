@@ -108,11 +108,12 @@ private:
   String _readSerial();
   String _readSerial(uint32_t timeout);
   bool _readSerialChar();
-
+  bool _saveSettingsInEEPROM();                //save settings in EEPROM sim800l
   int64_t getInt(int num);            //получить int из подстроки  
   float getFloat(int num);            //получить float
   bool equals(int num, const char* comp);  // сравнить подстроку с другой строкой
   
+
 
 public:  
 

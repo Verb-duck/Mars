@@ -54,7 +54,7 @@ void sendSetupSms(byte send)
   message += " /rssi: ";
   itoa(GSM.getSignalQuality(),temp,10);
   message += temp;
-  message += " ,ber: ";
+  message += ", ber: ";
   itoa(GSM.getSignalBer(),temp,10);
   message += temp;
 
@@ -66,12 +66,12 @@ void sendSetupSms(byte send)
   message += temp;
   message += "*C";
   //влажность
-  message += " ,h: ";
+  message += ", h: ";
   dtostrf(bme.readHumidity(), 3, 1, temp);
   message += temp;
   message += "%";
   //давление
-  message += " ,p: ";
+  message += ", p: ";
   dtostrf(bme.readPressure(), 4, 1, temp);
   message += temp;
   message += "mm Hg/  ";

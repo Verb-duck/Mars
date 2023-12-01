@@ -122,6 +122,9 @@ void Sim800L::begin(uint32_t baud)
   if (LED_FLAG) pinMode(led_pin, OUTPUT);
 
   _buffer.reserve(BUFFER_RESERVE_MEMORY); // Reserve memory to prevent intern fragmention
+
+  _saveSettingsInEEPROM();
+  
 }
 
 void Sim800L::checkList()
@@ -999,6 +1002,20 @@ bool Sim800L::_readSerialChar()
   }
   return result;
 }
+
+bool Sim800L::_saveSettingsInEEPROM() 
+{
+  byte attempt = 0;
+  do
+  {
+    attempt++;
+    if(attempt == 10)
+      return false;
+    this->SoftwareSerial::print(F("AT&W\r\n "));
+  } while (_readSerial().indexOf("OK") == -1);
+  return true;
+}
+
 
 int64_t Sim800L::getInt(int num) 
   { return atoll(partMSG[num]); }
