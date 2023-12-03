@@ -137,6 +137,7 @@ public:
   void begin();					//Default baud 9600
   void begin(uint32_t baud);
   bool reset();
+  bool progaramReset();
   void checkList();
   
   String readMessage();

@@ -566,6 +566,12 @@ bool Sim800L::reset()
   return true;
 }
 
+bool Sim800L::progaramReset()             //command for resseting
+{
+  this->SoftwareSerial::print(F("AT+CFUN=1\r\n ")); 
+  return false;
+}
+
 String  Sim800L::readMessage(){
   
   return _readSerial(10);
@@ -922,7 +928,7 @@ void Sim800L::setSettingRtcMobilNetwork()
     this->SoftwareSerial::print(F("AT+CLTS=1\r\n "));
     if ( (_readSerial().indexOf("ER")) ==-1)
       if(_saveSettingsInEEPROM());
-        this->SoftwareSerial::print(F("AT+CFUN=1\r\n "));  //command for resseting
+        progaramReset(); 
   }
 }
 
