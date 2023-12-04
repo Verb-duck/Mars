@@ -125,99 +125,53 @@ void Sim800L::begin(uint32_t baud)
 
 }
 
-void Sim800L::checkList()
-{
-  String str;
-  byte attempt = 0;
-  
- //проверяем готовность модуля к приему команд.
-  this->SoftwareSerial::print(F("AT\r\n "));    //костыль, без него
-  _readSerial();                                //сразу перезагружает
-  this->SoftwareSerial::print(F("AT\r\n "));
-  if(_readSerial().indexOf("OK")==-1)    //перезагружаем модуль, если не алё
-  {
-    if(!reset())      
-    {
-      return ;
-    }
-  } 
-  Serial.println("sim800 answered: OK" ) ;
 
- //Отключить эхо AT-команд.
-  this->SoftwareSerial::print(F("ATE0\r\n "));
-  if(_readSerial().indexOf("OK")!=-1)
-    Serial.println("echo off OK");
-  else 
-    Serial.println("echo off NO");
-  
-  //уровень заряда акб
-  Serial.print("battery level: ");
-  Serial.println(getChargeLevelBattery());
-  
-  // //проверка пинкода, ввод.
-  // if(statusPin()){  
-  //   enterPin();
-  // }
+bool Sim800L::readiness(int time_waitng)
+{
+  int attempt = 0;
+  //проверяем готовность модуля к приему команд.
+   
+  do
+  {
+    if(attempt)     //если не первый круг, перезагружаем
+      reset();
+    this->SoftwareSerial::print(F("AT\r\n "));
+    attempt ++;
+    delay(10);
+    if(attempt >= time_waitng/10)      //вышло время ожидания 
+    {
+      PRINT("not registered on the network ", "");
+      return false;
+    }
+  }
+  while(_readSerial().indexOf("OK")==-1);     //крутим пока модуль не ответит
+  PRINT("sim800 answered", "OK" ) ;
+  attempt = 0;
 
   //проверяем готовность и текущее состояние модуля.
-  this->SoftwareSerial::print(F("AT+CPAS\r\n "));
     /*Информация о состояние модуля
       +CPAS: 0 OK
       0 – готов к работе
       2 – неизвестно
       3 – входящий звонок
       4 – голосовое соединение*/
-  if(_readSerial().indexOf("OK")==-1)  
-  { 
-    Serial.println("status communication module  ERROR");
-    return;
-  }
-  else      //если всё ок, продолжаем проверку модуля 
-  { 
-    Serial.println("status communication module  OK");
-    
-    //проверка регистрации в сети
-    Serial.println(registrationInNetwork());
-
-    //Запрос уровня сигнала:
-    Serial.print("RSSI: ");
-    Serial.print(getSignalQuality());
-    Serial.print(", BER: ");
-    Serial.println(getSignalBer());
-
-    //установка времени в модуль
-    Serial.print("date/time update ");
-    setSettingRtcMobilNetwork();    
-    updateRtc();
-    if(year != 4)               //date/time updated
-      Serial.println("OK");
-    else                        //date/time not updated
+  do
+  {
+    if(attempt)     //если не первый круг, перезагружаем
+      reset();
+    this->SoftwareSerial::print(F("AT+CPAS\r\n "));
+    attempt ++;
+    delay(100);
+    if(attempt == time_waitng/100)      //вышло время ожидания 
     {
-      Serial.println("the mobile operator did not provide the date/time,");
-      if(updateRtcGSM(3))       //recieve date/time from network
-      {
-        Serial.println("the date/time updated from the network");
-      }
-      else Serial.println("the date/time dont update");
+      PRINT("status communication module","ERROR");
+      return false;
     }
- 
-    //подготовка смс
-    while(!prepareForSmsReceive())
-    {
-      attempt++;
-      if (attempt == 5)
-      {
-        PRINT("prepareForSmsReceive", "ERROR");
-        break;;
-      }
-      delay(1000);
-    }
-    attempt = 0;
-    PRINT("prepareForSmsReceive", "OK");
   }
-
+  while(_readSerial().indexOf("OK")==-1);     //крутим пока модуль не ответит
+  PRINT("status communication module","OK");
+  return true;
 }
-
 
 /*
  * AT+CSCLK=0	Disable slow clock, module will not enter sleep mode.
@@ -396,35 +350,35 @@ int Sim800L::getSignalBer() {
 }
 
 //проверка регистрации в сети
-String Sim800L::registrationInNetwork() 
+bool Sim800L::registrationInNetwork(int time_waitng) 
 {
-  byte attempt = 0;
+  int attempt = 0;
   while(1)
   {
     this->SoftwareSerial::print(F("AT+CREG?\r\n "));
-    if(_readSerialChar())
+    // //2ой параметр
+    switch (_readSerial()[11]) {
+      case '0':     //"not registered on the network";
+        break;          
+      case '1':     // "registered,home network";
+        PRINT("registration in the home network","");
+        return true;
+      case '2':     // search
+        break;
+      case '3':      // "registration rejected";
+        break;
+      case '5':      // "roaming";
+        PRINT("registration in the roaming network","");
+        return true;
+      default:
+        break;        
+    }
+    attempt++;
+    delay(1000);
+    if(attempt >= time_waitng / 1000)
     {
-      //2ой параметр
-      switch (getInt(2)) {
-        case 0:
-          return "not registered on the network";
-        case 1:
-          return "registered,home network";
-        case 2:     //поиск сети
-            attempt++;
-            delay(500);
-            if(attempt == 14)     //ждём 7 сек, и идём дальше
-            {
-              return "not registered,the search for a new network will continue";
-            }
-          break;
-        case 3:
-          return "registration rejected";
-        case 5:
-          return "roaming";
-        default:
-          break;        
-      }
+      PRINT ("not registered network", "");
+      return false;
     }
   }
 }
@@ -539,7 +493,7 @@ String Sim800L::getLatitude()
 //PUBLIC METHODS
 //
 
-bool Sim800L::reset()
+void Sim800L::reset()
 {
   PRINT("restart sim800",);
   if (LED_FLAG) digitalWrite(led_pin,1);
@@ -550,20 +504,12 @@ bool Sim800L::reset()
     digitalWrite(reset_pin,1);
     delay(2000);
   }
-  //wait for the module response
-  this->SoftwareSerial::print(F("AT\r\n"));
-  byte attempt = 0;
-  while (_readSerial().indexOf("OK")==-1 )
-  {
-    attempt++;
-    if(attempt == 5) {
-      PRINT("sim800 doesn't answer", "");
-      return false;
-    }       
-    this->SoftwareSerial::print(F("AT\r\n"));
-  }
-  if (LED_FLAG) digitalWrite(led_pin,0);
-  return true;
+}
+
+bool Sim800L::progaramReset()             //command for resseting
+{
+  this->SoftwareSerial::print(F("AT+CFUN=1\r\n ")); 
+  return false;
 }
 
 String  Sim800L::readMessage(){
@@ -790,7 +736,31 @@ bool Sim800L::delAllSms()
     // Error NOT found, return 0
 }
 
-String Sim800L::getRtc()
+
+//установка времени в модуль
+bool Sim800L::updateRtc()
+{ 
+  Serial.print("date/time update ");
+  setSettingRtcMobilNetwork();    
+  updateRtcValue();
+  if(year != 4)               //date/time updated
+    Serial.println("OK");
+  else                        //date/time not updated
+  {
+    Serial.println("the mobile operator did not provide the date/time,");
+    if(updateRtcGSM(3))       //recieve date/time from network
+    {
+      Serial.println("the date/time updated from the network");
+    }
+    else Serial.println("the date/time dont update");
+  }
+
+  
+  
+  return true;
+}
+
+String Sim800L::getRtcString()
 {
     this->SoftwareSerial::print(F("at+cclk?\r\n"));
     // if respond with ERROR try one more time.
@@ -816,7 +786,7 @@ String Sim800L::getRtc()
 }
 
 //обновление переменных с временем и датой из модуля
-void Sim800L::updateRtc()
+void Sim800L::updateRtcValue()
 {
     this->SoftwareSerial::print(F("at+cclk?\r\n"));
     // if respond with ERROR try one more time.
@@ -922,7 +892,7 @@ void Sim800L::setSettingRtcMobilNetwork()
     this->SoftwareSerial::print(F("AT+CLTS=1\r\n "));
     if ( (_readSerial().indexOf("ER")) ==-1)
       if(_saveSettingsInEEPROM());
-        this->SoftwareSerial::print(F("AT+CFUN=1\r\n "));  //command for resseting
+        progaramReset(); 
   }
 }
 
@@ -1000,7 +970,7 @@ bool Sim800L::_readSerialChar()
   while(this->SoftwareSerial::available())
   {
     result = true;
-    char ch  = this->SoftwareSerial::read();
+    char ch  = (char) this->SoftwareSerial::read();
     if(ch == ':') 
     {
       _buf[_countBuff++] = '\0';
@@ -1033,8 +1003,8 @@ bool Sim800L::_saveSettingsInEEPROM()
 }
 
 
-int64_t Sim800L::getInt(int num) 
-  { return atoll(partMSG[num]); }
+int Sim800L::getInt(int num) 
+  { return atoi(partMSG[num]); }
 
 float Sim800L::getFloat(int num) 
   { return atof(partMSG[num]); }
