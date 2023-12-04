@@ -1,8 +1,9 @@
 
 #define DEBUGING 1
-#define KEY_EEPROM 1      //для сброса EEPROM памяти, поменять число, сохранятся значения присвоенные при инициализации переменных
+#define KEY_EEPROM 1                 //для сброса EEPROM памяти, поменять число, сохранятся значения присвоенные при инициализации переменных
 #define PHONE_NUMBER "+79522220302"     //номер для смс  уведомлений
-#define SEND_SMS 0        //отправка смс при запуске, да/нет
+#define SEND_SMS 0                  //отправка смс при запуске, да/нет
+#define TIME_WAITING 15000        //время принудительного ожидания ответа модуля/поиска сети, мкс,после чего контроллер пропускает отправку смс.
 
 #include <Arduino.h>
 #include "EEPROM_memory.h"
@@ -29,11 +30,10 @@ void setup() {
   Serial.println();     
   Serial.println("Start ESP!");
   GSM.begin(115200);
-  GSM.checkList();
   bme.setMode(FORCED_MODE);         //датчик спит, измерения после вызова .oneMeasurement()
   bme.begin(); 
   memory.update(KEY_EEPROM);      //чтение/сохранение данных из EEPRom памяти 
-  sendSetupSms(SEND_SMS);           //отправка заряда, значений с датчика 
+  sendSetupSms();           //отправка заряда, значений с датчика 
   
 }
 

@@ -40,10 +40,17 @@ void waitingSMS() {
 }
 
 
-void sendSetupSms(byte send)
+void sendSetupSms()
 {
   String message;
   char temp[5];
+
+  //проверяем и ждём готовность модуля связи к приёму команд
+  GSM.readiness(TIME_WAITING);      
+  
+  //делаем измерения, пока загружается модуль связи
+  bme.oneMeasurement();          // Просим датчик проснуться и сделать одно преобразование
+  while (bme.isMeasuring());     // Ждем окончания преобразования
 
   //заряд батареи
   message += "battery: ";
@@ -54,6 +61,18 @@ void sendSetupSms(byte send)
   itoa(GSM.getVoltageBattery(),temp,10);
   message += temp;
   message += "mv";
+  
+  GSM.registrationInNetwork(TIME_WAITING);
+  
+  //подготовка смс
+  if(GSM.prepareForSmsReceive())
+  {
+    PRINT("prepareForSmsReceive", "OK");
+  }
+  else
+  {
+    PRINT("prepareForSmsReceive", "ERROR");
+  }
 
   //уровень сигнала
   message += "/ rssi: ";
@@ -63,8 +82,6 @@ void sendSetupSms(byte send)
   itoa(GSM.getSignalBer(),temp,10);
   message += temp;
 
-  bme.oneMeasurement();          // Просим датчик проснуться и сделать одно преобразование
-  while (bme.isMeasuring());     // Ждем окончания преобразования
   //температура
   message += "/ t: ";
   dtostrf(bme.readTemperature(), 3, 1, temp);
@@ -81,12 +98,14 @@ void sendSetupSms(byte send)
   message += temp;
   message += "mm Hg/ ";
   //time
-  message += GSM.getRtc();
+  GSM.updateRtc();
+  message += GSM.getRtcString();
 
-  if( send != 0)
+  #if( SEND_SMS != 0)
     GSM.sendSms(PHONE_NUMBER,message.c_str());
-  Serial.print("text sms  ");
-  Serial.println(message );
+  #endif
+
+  PRINT("text sms", message );
 }
 
 

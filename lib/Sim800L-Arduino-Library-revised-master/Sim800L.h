@@ -109,7 +109,7 @@ private:
   String _readSerial(uint32_t timeout);
   bool _readSerialChar();
   bool _saveSettingsInEEPROM();                //save settings in EEPROM sim800l
-  int64_t getInt(int num);            //получить int из подстроки  
+  int getInt(int num);            //получить int из подстроки  
   float getFloat(int num);            //получить float
   bool equals(int num, const char* comp);  // сравнить подстроку с другой строкой
   
@@ -129,6 +129,7 @@ public:
   int minute;
   int second;
 
+
   Sim800L(void);
   Sim800L(uint8_t rx, uint8_t tx);
   Sim800L(uint8_t rx, uint8_t tx, uint8_t rst);
@@ -136,9 +137,9 @@ public:
 
   void begin();					//Default baud 9600
   void begin(uint32_t baud);
-  bool reset();
+  void reset();
   bool progaramReset();
-  void checkList();
+  bool readiness(int time_waiting);       //проверяем и ждём готовность модуля связи к приёму команд
   
   String readMessage();
   void sendMessage(String message);
@@ -158,7 +159,7 @@ public:
 
   String getOperatorsList();
   String getOperator();
-  String registrationInNetwork();     //проверка регистрации в сети
+  bool registrationInNetwork(int time_waitng);     //проверка регистрации в сети
   int getSignalQuality();
   int getSignalBer();
 
@@ -186,8 +187,9 @@ public:
   void deactivateBearerProfile();         //закрытие GPRS соединения
   //bool setMode();
 
-  String getRtc();    //получение дата время строкой из модуля
-  void updateRtc();   //получение времени и даты из модуля в переменные day, month, hour и т.д.
+  bool updateRtc();
+  String getRtcString();    //получение дата время строкой из модуля
+  void updateRtcValue();   //получение времени и даты из модуля в переменные day, month, hour и т.д.
   bool updateRtcGSM(int utc);   //обновление время и дата модуля из инета с поправкой на часовой пояс
   private:
   String _dateNet();   //Get the time  of the base of GSM, возврат времени по гринвичу
