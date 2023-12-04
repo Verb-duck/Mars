@@ -3,7 +3,8 @@
 #define KEY_EEPROM 1      //для сброса EEPROM памяти, поменять число, сохранятся значения присвоенные при инициализации переменных
 #define PHONE_NUMBER "+79522220302"     //номер для смс  уведомлений
 #define TIME_ZONE 3                      //часовой пояс
-#define SEND_SMS 0        //отправка смс при запуске, да/нет
+#define SEND_SMS 0          //отправка смс при запуске, да/нет
+#define DELAY_POWER  5000   //задержка при первом включении, млс.   
 
 #include <Arduino.h>
 #include "EEPROM_memory.h"
@@ -25,6 +26,7 @@ GyverBME280 bme;      //на wemos подключен на SCL – D1, SDA – D
 
 //***************SETUP*************
 void setup() {
+  delay(DELAY_POWER);
   Serial.begin(115200);  
   Serial.println();     
   Serial.println("Start ESP!");
