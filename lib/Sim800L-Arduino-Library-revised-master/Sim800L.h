@@ -160,8 +160,8 @@ public:
   String getOperatorsList();
   String getOperator();
   bool registrationInNetwork(int time_waitng);     //проверка регистрации в сети
-  int getSignalQuality();
-  int getSignalBer();
+  String getSignalQuality();
+  String getSignalBer();
 
   bool calculateLocation();
   String getLocationCode();
@@ -187,7 +187,7 @@ public:
   void deactivateBearerProfile();         //закрытие GPRS соединения
   //bool setMode();
 
-  bool updateRtc();
+  String updateRtc();
   String getRtcString();    //получение дата время строкой из модуля
   void updateRtcValue();   //получение времени и даты из модуля в переменные day, month, hour и т.д.
   bool updateRtcGSM(int utc);   //обновление время и дата модуля из инета с поправкой на часовой пояс

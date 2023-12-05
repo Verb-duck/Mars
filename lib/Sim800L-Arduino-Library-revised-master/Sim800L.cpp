@@ -313,7 +313,7 @@ String Sim800L::getOperator()
 
 }
 
-int Sim800L::getSignalQuality()
+String Sim800L::getSignalQuality()
 {
     /*+CSQ: <rssi>,<ber>Parameters
     <rssi>
@@ -328,25 +328,17 @@ int Sim800L::getSignalQuality()
     99 Not known or not detectable
     */
   this->SoftwareSerial::print(F("AT+CSQ\r\n "));
-  if(_readSerialChar())
-  {
-    return atoi(partMSG[1]);
-  }
-  return -1;
+  return _readSerial().substring(8,10);
 }
 
-int Sim800L::getSignalBer() {
+String Sim800L::getSignalBer() {
     /*+CSQ: <rssi>,<ber>
     <ber> — RXQUAL (мера качества сигнала), значение из таблицы GSM 05.08 — ETSI:
     0...7 — коэффициент битовых ошибок (меньше — лучше)
     99 определить невозможно
     */
   this->SoftwareSerial::print(F("AT+CSQ\r\n "));
-  if(_readSerialChar())
-  {
-    return atoi(partMSG[2]);
-  }
-  return -1;
+  return _readSerial().substring(11,13);
 }
 
 //проверка регистрации в сети
@@ -738,7 +730,7 @@ bool Sim800L::delAllSms()
 
 
 //установка времени в модуль
-bool Sim800L::updateRtc()
+String Sim800L::updateRtc()
 { 
   Serial.print("date/time update ");
   setSettingRtcMobilNetwork();    
@@ -754,10 +746,14 @@ bool Sim800L::updateRtc()
     }
     else Serial.println("the date/time dont update");
   }
-
+  //меняем день и год в строке местами
+    _buffer[0] = _buffer[0] + _buffer[6] - (_buffer[6] = _buffer[0]);
+    _buffer[1] = _buffer[1] + _buffer[7] - (_buffer[7] = _buffer[1]);
+    _buffer[2] = '.';
+    _buffer[5] = '.';
   
   
-  return true;
+  return _buffer;
 }
 
 String Sim800L::getRtcString()
