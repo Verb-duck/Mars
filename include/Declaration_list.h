@@ -42,7 +42,9 @@ void waitingSMS() {
 
 void sendSetupSms()
 {
-  String message;
+  static bool send_sms = false;
+  static String message;
+  message.reserve(110);
   char temp[5];
 
   //проверяем и ждём готовность модуля связи к приёму команд
@@ -76,11 +78,9 @@ void sendSetupSms()
 
   //уровень сигнала
   message += "/ rssi: ";
-  itoa(GSM.getSignalQuality(),temp,10);
-  message += temp;
+  message += GSM.getSignalQuality();
   message += ", ber: ";
-  itoa(GSM.getSignalBer(),temp,10);
-  message += temp;
+  message += GSM.getSignalBer();
 
   //температура
   message += "/ t: ";
@@ -98,13 +98,11 @@ void sendSetupSms()
   message += temp;
   message += "mm Hg/ ";
   //time
-  GSM.updateRtc();
-  message += GSM.getRtcString();
+  message += GSM.updateRtc();
 
   #if( SEND_SMS != 0)
     GSM.sendSms(PHONE_NUMBER,message.c_str());
   #endif
-
   PRINT("text sms", message );
 }
 
